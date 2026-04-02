@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Interactive synthesizers and audio experiments." />
+  <title>Synthesizers — audio</title>
+  <style>
+    :root {
+      --bg: #0a0a0c;
+      --text: rgba(255, 255, 255, 0.88);
+      --muted: rgba(255, 255, 255, 0.5);
+      --line: rgba(255, 255, 255, 0.1);
+      --accent: #c4a882;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      line-height: 1.5;
+    }
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.65rem 1.25rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(10, 10, 12, 0.92);
+      backdrop-filter: blur(10px);
+    }
+    .site-nav a {
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      font-size: 0.88rem;
+    }
+    .site-nav a:hover { color: #fff; }
+    .site-nav .brand {
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+    }
+    .site-nav nav {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .site-nav .here {
+      color: #fff;
+      font-weight: 500;
+    }
+    main {
+      max-width: 36rem;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin: 0 0 0.35rem;
+      letter-spacing: 0.02em;
+    }
+    .sub {
+      margin: 0 0 2rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    li {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    li a {
+      display: block;
+      padding: 1rem 1.1rem;
+      color: inherit;
+      text-decoration: none;
+      transition: background 0.15s ease;
+    }
+    li a:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .name {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    .desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .placeholder {
+      padding: 1rem 1.1rem;
+      border-style: dashed;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-nav" role="navigation" aria-label="Site">
+    <a href="./" class="brand">Audio</a>
+    <nav>
+      <span class="here">Synthesizers</span>
+      <a href="./">Painting with John</a>
+    </nav>
+  </header>
+  <main>
+    <h1>Synthesizers</h1>
+    <p class="sub">Self-contained pages — add a new <code style="font-size:0.85em;">.html</code> file in this folder and link it below.</p>
+    <ul>
+      <li>
+        <a href="./">
+          <div class="name">Painting with John</div>
+          <div class="desc">p5.sound — bass drone, clarinet-like line, soft noise hits. Tap to start.</div>
+        </a>
+      </li>
+      <li class="placeholder" aria-hidden="true">
+        Next instrument: add <code>your-synth.html</code> next to <code>index.html</code>, then duplicate a list row above this box and point the <code>href</code> to it.
+      </li>
+    </ul>
+  </main>
+</body>
+</html>

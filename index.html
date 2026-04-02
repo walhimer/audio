@@ -11,6 +11,44 @@
       min-height: 100%;
       background: #0a0a0c;
     }
+    .site-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.65rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(10, 10, 12, 0.88);
+      backdrop-filter: blur(10px);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    .site-nav a {
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      font-size: 0.88rem;
+    }
+    .site-nav a:hover { color: #fff; }
+    .site-nav .brand {
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #c4a882;
+    }
+    .site-nav nav {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .site-nav .here {
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
     #gate {
       position: fixed;
       inset: 0;
@@ -52,6 +90,13 @@
   -->
 </head>
 <body>
+  <header class="site-nav" role="navigation" aria-label="Site">
+    <a href="./" class="brand">Audio</a>
+    <nav>
+      <span class="here">Painting with John</span>
+      <a href="./synths.html">All synthesizers</a>
+    </nav>
+  </header>
   <div id="gate">
     <div>
       <p>Generative soundtrack — bass drone, clarinet-like line, soft noise hits. Tap anywhere to start (browsers require a gesture for audio).</p>
