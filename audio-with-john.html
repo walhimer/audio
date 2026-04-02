@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Audio with John — generative p5.sound layer: bass drone, clarinet-like line, soft noise hits." />
+  <title>Audio with John — Soundscapes — Mark Walhimer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:    #0a0a0a;
+      --offwhite: #f0ede6;
+      --dim:      #666660;
+      --rule:     #1e1e1e;
+      --accent:   #c8a882;
+      --border:   #2a2a2a;
+      --bright:   #f0f0f0;
+      --accent-dim: #8a7340;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--black);
+      color: var(--offwhite);
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 300;
+      min-height: 100vh;
+    }
+
+    nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: stretch;
+      padding: 0 40px;
+      border-bottom: 1px solid var(--border);
+      background: var(--black);
+    }
+    .nav-logo {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 22px 32px 22px 0;
+      margin-right: 8px;
+      border-right: 1px solid var(--border);
+    }
+    .nav-links { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+    .nav-links a {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--dim);
+      text-decoration: none;
+      padding: 22px 20px;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+    }
+    .nav-links a:hover { color: var(--bright); }
+    .nav-links a.active { color: var(--accent); border-bottom: 1px solid var(--accent); margin-bottom: -1px; }
+
+    #gate {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      background: rgba(8, 8, 8, 0.88);
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+    #gate > div {
+      padding: 88px 32px 32px;
+      text-align: center;
+      max-width: 42ch;
+    }
+    #gate h2 {
+      font-size: clamp(22px, 3vw, 28px);
+      font-weight: 400;
+      margin-bottom: 16px;
+      color: var(--offwhite);
+    }
+    #gate p {
+      margin: 0 0 24px;
+      font-size: clamp(15px, 2vw, 17px);
+      font-weight: 300;
+      line-height: 1.65;
+      color: rgba(240, 237, 230, 0.88);
+    }
+    #gate .continue {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      border-radius: 0;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    #gate .continue:hover {
+      color: var(--bright);
+      border-color: var(--accent);
+    }
+    #gate.hidden { display: none; }
+
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 40px 80px;
+    }
+    main h1 {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    main .lede {
+      font-size: clamp(15px, 1.8vw, 18px);
+      line-height: 1.65;
+      color: rgba(240, 237, 230, 0.82);
+      margin-bottom: 28px;
+      max-width: 40rem;
+    }
+
+    .controls {
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+      padding: 20px 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    .controls.visible { display: flex; }
+
+    .elapsed {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 22px;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      min-width: 5.5ch;
+    }
+    .elapsed-label {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      width: 100%;
+      margin-bottom: -8px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .controls button {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 12px 18px;
+      border: 1px solid var(--border);
+      background: var(--black);
+      color: var(--offwhite);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+    }
+    .controls button:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .controls button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .controls button.primary {
+      border-color: var(--accent-dim);
+      color: var(--accent);
+    }
+    .controls button.recording {
+      border-color: #c44;
+      color: #f88;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="/">Mark Walhimer</a>
+    <div class="nav-links">
+      <a href="/index.html">Installations</a>
+      <a href="/projects/index.html">Projects</a>
+      <a href="/sketches/index.html">Sketches</a>
+      <a href="/audio/" class="active">Soundscapes</a>
+      <a href="/bio/index.html">Bio / CV</a>
+      <a href="/contact/index.html">Contact</a>
+    </div>
+  </nav>
+  <div id="gate">
+    <div>
+      <h2>Audio with John</h2>
+      <p>Generative soundtrack — bass drone, clarinet-like line, soft noise hits. Continue to open the player (your browser needs a gesture before audio can run).</p>
+      <button type="button" class="continue" id="gateContinue">Continue</button>
+    </div>
+  </div>
+  <main>
+    <h1>Audio with John</h1>
+    <p class="lede">Self-contained p5.sound patch. Use Start and Stop to control playback. Elapsed time runs while audio is playing. Record captures the master output to a WAV download while the piece is playing.</p>
+    <div class="controls" id="controls" aria-live="polite">
+      <span class="elapsed-label">Elapsed</span>
+      <span class="elapsed" id="elapsed">00:00</span>
+      <div class="btn-row">
+        <button type="button" id="btnStart" class="primary">Start</button>
+        <button type="button" id="btnStop" disabled>Stop</button>
+        <button type="button" id="btnRecord" disabled>Record</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="./lib/p5.min.js"></script>
+  <script src="./lib/p5.sound.min.js"></script>
+  <script>
+  let bass, clarinet, percussion, reverb;
+  let notes = [48, 50, 53, 55, 57, 60];
+  let clarinetIntervalId = null;
+  let percussionIntervalId = null;
+  let playing = false;
+  let sessionStartMs = 0;
+  let recorder = null;
+  let recordedFile = null;
+  let isRecording = false;
+  let audioReady = false;
+
+  function formatElapsed(ms) {
+    const s = Math.floor(ms / 1000);
+    const m = Math.floor(s / 60);
+    const ss = s % 60;
+    return String(m).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+  }
+
+  function updateElapsedDisplay() {
+    const el = document.getElementById("elapsed");
+    if (!el) return;
+    if (!playing || !sessionStartMs) {
+      el.textContent = "00:00";
+      return;
+    }
+    el.textContent = formatElapsed(performance.now() - sessionStartMs);
+  }
+
+  function setTransportUi() {
+    const startBtn = document.getElementById("btnStart");
+    const stopBtn = document.getElementById("btnStop");
+    const recBtn = document.getElementById("btnRecord");
+    if (startBtn) startBtn.disabled = playing;
+    if (stopBtn) stopBtn.disabled = !playing;
+    if (recBtn) {
+      recBtn.disabled = !playing;
+      recBtn.textContent = isRecording ? "Stop recording" : "Record";
+      recBtn.classList.toggle("recording", isRecording);
+    }
+  }
+
+  function startPatch() {
+    if (playing) return;
+    reverb = new p5.Reverb();
+
+    bass = new p5.Oscillator("sine");
+    bass.freq(midiToFreq(random([36, 40, 43])));
+    bass.amp(0.05);
+    bass.start();
+    reverb.process(bass, 6, 0.5);
+
+    clarinet = new p5.Oscillator("triangle");
+    clarinet.amp(0.0);
+    clarinet.start();
+    reverb.process(clarinet, 5, 0.7);
+
+    percussion = new p5.Noise("pink");
+    percussion.amp(0.0);
+    percussion.start();
+    reverb.process(percussion, 2, 0.3);
+
+    clarinetIntervalId = setInterval(playClarinet, 4000);
+    percussionIntervalId = setInterval(playPercussion, 7000);
+
+    playing = true;
+    sessionStartMs = performance.now();
+    setTransportUi();
+  }
+
+  function stopPatch() {
+    if (isRecording && recorder) {
+      try {
+        recorder.stop();
+        if (typeof saveSound === "function" && recordedFile) {
+          saveSound(recordedFile, "audio-with-john.wav");
+        }
+      } catch (e) {}
+      isRecording = false;
+      recordedFile = null;
+    }
+
+    if (clarinetIntervalId) clearInterval(clarinetIntervalId);
+    if (percussionIntervalId) clearInterval(percussionIntervalId);
+    clarinetIntervalId = percussionIntervalId = null;
+
+    if (bass) {
+      bass.stop();
+      bass = null;
+    }
+    if (clarinet) {
+      clarinet.stop();
+      clarinet = null;
+    }
+    if (percussion) {
+      percussion.stop();
+      percussion = null;
+    }
+
+    reverb = null;
+    playing = false;
+    sessionStartMs = 0;
+    updateElapsedDisplay();
+    setTransportUi();
+  }
+
+  function playClarinet() {
+    if (!clarinet) return;
+    let n = random(notes);
+    clarinet.freq(midiToFreq(n));
+    clarinet.amp(0.1, 0.5);
+    setTimeout(() => {
+      if (clarinet) clarinet.amp(0.0, 2);
+    }, 1500);
+  }
+
+  function playPercussion() {
+    if (!percussion) return;
+    percussion.amp(0.05, 0.01);
+    setTimeout(() => {
+      if (percussion) percussion.amp(0.0, 0.5);
+    }, 200);
+  }
+
+  function setup() {
+    noCanvas();
+    try {
+      recorder = new p5.SoundRecorder();
+    } catch (e) {
+      recorder = null;
+    }
+  }
+
+  function draw() {
+    if (playing && sessionStartMs) {
+      if (frameCount % 15 === 0) updateElapsedDisplay();
+    }
+    if (!bass) return;
+    if (frameCount % 600 === 0) {
+      bass.freq(midiToFreq(random([36, 38, 41, 43])));
+    }
+  }
+
+  function unlockAudioThenShowControls() {
+    const run = () => {
+      audioReady = true;
+      const gate = document.getElementById("gate");
+      const controls = document.getElementById("controls");
+      if (gate) gate.classList.add("hidden");
+      if (controls) controls.classList.add("visible");
+      setTransportUi();
+    };
+
+    if (typeof userStartAudio === "function") {
+      userStartAudio().then(run).catch(() => {
+        if (typeof getAudioContext === "function") getAudioContext().resume();
+        run();
+      });
+    } else {
+      if (typeof getAudioContext === "function") getAudioContext().resume();
+      run();
+    }
+  }
+
+  document.getElementById("gateContinue").addEventListener("click", unlockAudioThenShowControls);
+
+  document.getElementById("btnStart").addEventListener("click", () => {
+    if (!audioReady) return;
+    if (playing) return;
+    startPatch();
+  });
+
+  document.getElementById("btnStop").addEventListener("click", () => {
+    if (!playing) return;
+    stopPatch();
+  });
+
+  document.getElementById("btnRecord").addEventListener("click", () => {
+    if (!audioReady || !playing || !recorder) return;
+    if (!isRecording) {
+      try {
+        recordedFile = new p5.SoundFile();
+        recorder.record(recordedFile);
+        isRecording = true;
+      } catch (e) {
+        isRecording = false;
+        recordedFile = null;
+      }
+    } else {
+      try {
+        recorder.stop();
+        if (typeof saveSound === "function" && recordedFile) {
+          saveSound(recordedFile, "audio-with-john.wav");
+        } else if (recordedFile && typeof save === "function") {
+          save(recordedFile, "audio-with-john.wav");
+        }
+      } catch (e) {}
+      isRecording = false;
+      recordedFile = null;
+    }
+    setTransportUi();
+  });
+  </script>
+</body>
+</html>
