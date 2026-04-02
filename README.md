@@ -1,6 +1,20 @@
 # Soundscapes (mark-walhimer.com/audio)
 
-Static pages for browser-based listening pieces. The hub is [`index.html`](index.html); each piece is a separate HTML file.
+Static, **self-contained** pages for browser-based listening pieces: **vendored scripts** in-repo so the site works without relying on CDN availability (except where noted for optional remote samples).
+
+The hub is [`index.html`](index.html); each piece lives in its own HTML file (or subfolder).
+
+---
+
+## What’s in this repo
+
+| Path | Description |
+|------|-------------|
+| [`index.html`](index.html) | Soundscapes hub — links to each piece. |
+| [`painting-with-john.html`](painting-with-john.html) | Generative *Painting with John*–style layer (p5 + p5.sound). |
+| [`lib/p5.min.js`](lib/p5.min.js), [`lib/p5.sound.min.js`](lib/p5.sound.min.js) | **Vendored** p5 + p5.sound (no CDN required for this patch). |
+| [`toneflow-lite/`](toneflow-lite/) | **Flow Lite** — Tone.js app; [`toneflow-lite/tone.js`](toneflow-lite/tone.js) is the library (bundled). |
+| [`synths.html`](synths.html) | Redirect to the hub (legacy URL). |
 
 ---
 
@@ -8,47 +22,59 @@ Static pages for browser-based listening pieces. The hub is [`index.html`](index
 
 **File:** [`painting-with-john.html`](painting-with-john.html)
 
-A small generative soundtrack inspired by the loose, patient feel of the *Painting with John* vibe: a low **bass drone** (sine), a **clarinet-like** line built from a triangle oscillator playing a **minor pentatonic** (MIDI notes 48–60), and occasional **pink-noise** hits—all through **reverb**. Nothing is sampled; it is all synthesized in real time.
+Generative soundtrack: bass drone (sine), triangle “clarinet” line on a minor pentatonic, pink-noise hits, reverb. All **synthesized** (no samples).
 
-### Stack (what it’s actually built with)
+### Stack
 
 | Piece | Role |
 |--------|------|
-| **HTML** | Page shell, layout, “tap to start” overlay (needed for browser autoplay rules). |
-| **JavaScript** | Patch logic: timers, note picks, amplitude envelopes. |
-| **[p5.js](https://p5js.org/)** | Runs `setup` / `draw` and provides helpers like `random`, `midiToFreq`. |
-| **[p5.sound](https://p5js.org/reference/#/libraries/p5.sound)** | Oscillators, noise, reverb—implemented **on top of the Web Audio API** inside the library. |
+| **HTML / CSS** | Layout, site nav, tap-to-start overlay. |
+| **JavaScript** | Patch logic, timers, envelopes. |
+| **[p5.js](https://p5js.org/)** | `setup` / `draw`, `random`, `midiToFreq`. |
+| **[p5.sound](https://p5js.org/reference/#/libraries/p5.sound)** | Oscillators, noise, reverb (built on **Web Audio** inside the library). |
 
-So: **yes, it ends up using the Web Audio API**, but you don’t write raw `AudioContext` nodes here—the **p5.sound** addon does that for you.
-
-**Not used in this patch:** [Tone.js](https://tonejs.github.io/). (Tone.js is Web Audio–based too, but it’s a different library.)
-
-**CDN (current):** p5 `1.11.11` from jsDelivr, loaded in the HTML file.
-
-### How to run locally
-
-1. Serve the folder over HTTP (browsers are picky about `file://` + audio), for example:  
-   `python3 -m http.server 8080`
-2. Open  
-   `http://localhost:8080/painting-with-john.html`  
-   and click / tap to start audio.
-
-### Deploy
-
-This repo powers **Soundscapes** on the main site (e.g. `/audio/`). Push to `main` on the remote you use for hosting; details depend on your DNS / Git host.
-
-### License / attribution
-
-The **code** is yours to manage under your usual project license. The **sound** is generative from oscillators and noise—no third-party sample packs in this file.
+Scripts load from **`./lib/`** (committed in this repo), not from a CDN.
 
 ---
 
-## Repo layout (short)
+## Flow Lite (Tone.js)
 
-| File | Purpose |
-|------|---------|
-| `index.html` | Soundscapes hub — list of pieces. |
-| `painting-with-john.html` | Painting with John patch. |
-| `synths.html` | Redirect to the hub (legacy path). |
+**Entry:** [`toneflow-lite/index.html`](toneflow-lite/index.html)
 
-Add new pieces as `your-piece.html` and link them from `index.html`.
+Step sequencer / generative note UI using **Tone.js**. The **`toneflow-lite/tone.js`** file is a bundled copy of the library so the page runs **without a CDN**.
+
+- **Synth modes:** fully offline once the page is loaded.
+- **“Piano (samples)” mode:** loads **Salamander** MP3s from Tone’s public demo URL (`tonejs.github.io/audio/salamander/`). That part **requires network** the first time samples are fetched.
+
+---
+
+## Run locally
+
+```bash
+cd /path/to/this/repo
+python3 -m http.server 8080
+```
+
+Then open e.g. `http://localhost:8080/`, `http://localhost:8080/painting-with-john.html`, or `http://localhost:8080/toneflow-lite/`.
+
+(Audio often fails on raw `file://` opens — use a local server.)
+
+---
+
+## Deploy
+
+Push **`main`** to the remote used for **mark-walhimer.com** `/audio/` (or GitHub Pages). No build step.
+
+---
+
+## Adding a new piece
+
+1. Add `your-piece.html` (or a folder with `index.html`).
+2. Link it from [`index.html`](index.html).
+3. Prefer **vendoring** any third-party JS under `lib/` or next to the page so the repo stays deployable without CDN dependency.
+
+---
+
+## License
+
+Your code: your usual project terms. Painting with John uses only synthesized audio (no sample packs). Flow Lite’s optional piano uses the public Salamander set documented by Tone.js for demos; check [Tone.js](https://tonejs.github.io/) / sample licensing if you redistribute that mode commercially.
