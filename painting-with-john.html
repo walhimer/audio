@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Generative p5.sound layer: bass drone, clarinet-like line, noise hits. No piano — tap to start audio." />
+  <title>Painting with John — audio</title>
+  <style>
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #0a0a0c;
+    }
+    .site-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.65rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(10, 10, 12, 0.88);
+      backdrop-filter: blur(10px);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    .site-nav a {
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      font-size: 0.88rem;
+    }
+    .site-nav a:hover { color: #fff; }
+    .site-nav .brand {
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #c4a882;
+    }
+    .site-nav nav {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .site-nav .here {
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+    #gate {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      background: rgba(8, 8, 10, 0.78);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      cursor: pointer;
+    }
+    #gate p {
+      margin: 0 0 14px;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.65);
+      text-align: center;
+      max-width: 32ch;
+      line-height: 1.45;
+    }
+    #gate button {
+      padding: 14px 22px;
+      font-size: 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      color: #eee;
+      cursor: pointer;
+      pointer-events: none;
+    }
+    #gate button:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+    #gate.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-nav" role="navigation" aria-label="Site">
+    <a href="./" class="brand">Audio</a>
+    <nav>
+      <span class="here">Painting with John</span>
+    </nav>
+  </header>
+  <div id="gate">
+    <div>
+      <p>Generative soundtrack — bass drone, clarinet-like line, soft noise hits. Tap anywhere to start (browsers require a gesture for audio).</p>
+      <button type="button" id="go">Start audio</button>
+    </div>
+  </div>
+  <main></main>
+
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/addons/p5.sound.min.js"></script>
+  <script>
+  let bass, clarinet, percussion, reverb;
+  let notes = [48, 50, 53, 55, 57, 60];
+
+  function startPatch() {
+    reverb = new p5.Reverb();
+
+    bass = new p5.Oscillator("sine");
+    bass.freq(midiToFreq(random([36, 40, 43])));
+    bass.amp(0.05);
+    bass.start();
+    reverb.process(bass, 6, 0.5);
+
+    clarinet = new p5.Oscillator("triangle");
+    clarinet.amp(0.0);
+    clarinet.start();
+    reverb.process(clarinet, 5, 0.7);
+
+    percussion = new p5.Noise("pink");
+    percussion.amp(0.0);
+    percussion.start();
+    reverb.process(percussion, 2, 0.3);
+
+    setInterval(playClarinet, 4000);
+    setInterval(playPercussion, 7000);
+  }
+
+  function playClarinet() {
+    let n = random(notes);
+    clarinet.freq(midiToFreq(n));
+    clarinet.amp(0.1, 0.5);
+    setTimeout(() => {
+      clarinet.amp(0.0, 2);
+    }, 1500);
+  }
+
+  function playPercussion() {
+    percussion.amp(0.05, 0.01);
+    setTimeout(() => {
+      percussion.amp(0.0, 0.5);
+    }, 200);
+  }
+
+  function setup() {
+    noCanvas();
+  }
+
+  let audioStarted = false;
+  function beginAudioFromUserGesture() {
+    if (audioStarted) return;
+    audioStarted = true;
+    let gate = document.getElementById("gate");
+    if (gate) gate.classList.add("hidden");
+    if (typeof userStartAudio === "function") {
+      userStartAudio().then(startPatch).catch(() => {
+        if (typeof getAudioContext === "function") getAudioContext().resume();
+        startPatch();
+      });
+    } else {
+      if (typeof getAudioContext === "function") getAudioContext().resume();
+      startPatch();
+    }
+  }
+
+  function wireStartGate() {
+    let gate = document.getElementById("gate");
+    if (!gate || gate.dataset.wired === "1") return;
+    gate.dataset.wired = "1";
+    gate.addEventListener(
+      "click",
+      () => {
+        beginAudioFromUserGesture();
+      },
+      { once: true }
+    );
+    gate.addEventListener("keydown", function onGateKeydown(e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      gate.removeEventListener("keydown", onGateKeydown);
+      beginAudioFromUserGesture();
+    });
+    gate.setAttribute("tabindex", "0");
+    gate.setAttribute("role", "button");
+    gate.setAttribute("aria-label", "Start audio");
+  }
+
+  function scheduleWireStartGate() {
+    setTimeout(wireStartGate, 0);
+  }
+  if (document.readyState === "complete") {
+    scheduleWireStartGate();
+  } else {
+    window.addEventListener("load", scheduleWireStartGate);
+  }
+
+  function draw() {
+    if (!bass) return;
+    if (frameCount % 600 === 0) {
+      bass.freq(midiToFreq(random([36, 38, 41, 43])));
+    }
+  }
+  </script>
+</body>
+</html>
