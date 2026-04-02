@@ -3,82 +3,105 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Generative p5.sound layer: bass drone, clarinet-like line, noise hits. No piano — tap to start audio." />
-  <title>Painting with John — soundscapes</title>
+  <meta name="description" content="Generative p5.sound layer: bass drone, clarinet-like line, noise hits. Tap to start audio." />
+  <title>Painting with John — Soundscapes — Mark Walhimer</title>
   <style>
-    html, body {
-      margin: 0;
-      min-height: 100%;
-      background: #0a0a0c;
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:    #0a0a0a;
+      --offwhite: #f0ede6;
+      --dim:      #666660;
+      --rule:     #1e1e1e;
+      --accent:   #c8a882;
+      --border:   #2a2a2a;
+      --bright:   #f0f0f0;
     }
-    .site-nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--black);
+      color: var(--offwhite);
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 300;
+      min-height: 100vh;
+    }
+
+    nav {
+      position: relative;
       z-index: 10;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.65rem 1.25rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(10, 10, 12, 0.88);
-      backdrop-filter: blur(10px);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      align-items: stretch;
+      padding: 0 40px;
+      border-bottom: 1px solid var(--border);
+      background: var(--black);
     }
-    .site-nav a {
-      color: rgba(255, 255, 255, 0.75);
-      text-decoration: none;
-      font-size: 0.88rem;
-    }
-    .site-nav a:hover { color: #fff; }
-    .site-nav .brand {
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      color: #c4a882;
-    }
-    .site-nav nav {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .site-nav .here {
-      color: #fff;
-      font-size: 0.88rem;
+    .nav-logo {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
       font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 22px 32px 22px 0;
+      margin-right: 8px;
+      border-right: 1px solid var(--border);
     }
+    .nav-links { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+    .nav-links a {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--dim);
+      text-decoration: none;
+      padding: 22px 20px;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+    }
+    .nav-links a:hover { color: var(--bright); }
+    .nav-links a.active { color: var(--accent); border-bottom: 1px solid var(--accent); margin-bottom: -1px; }
+
     #gate {
       position: fixed;
       inset: 0;
       z-index: 2;
       display: grid;
       place-items: center;
-      background: rgba(8, 8, 10, 0.78);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: rgba(8, 8, 8, 0.88);
       cursor: pointer;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+    #gate > div {
+      padding: 88px 32px 32px;
+      text-align: center;
+      max-width: 36ch;
     }
     #gate p {
-      margin: 0 0 14px;
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.65);
-      text-align: center;
-      max-width: 32ch;
-      line-height: 1.45;
+      margin: 0 0 20px;
+      font-size: clamp(16px, 2.2vw, 19px);
+      font-weight: 300;
+      line-height: 1.65;
+      color: rgba(240, 237, 230, 0.88);
     }
     #gate button {
-      padding: 14px 22px;
-      font-size: 1rem;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.1);
-      color: #eee;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 14px 24px;
+      border-radius: 0;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--accent);
       cursor: pointer;
       pointer-events: none;
+      transition: color 0.15s, border-color 0.15s;
     }
     #gate button:hover {
-      background: rgba(255, 255, 255, 0.16);
+      color: var(--bright);
+      border-color: var(--accent);
     }
     #gate.hidden {
       display: none;
@@ -86,12 +109,17 @@
   </style>
 </head>
 <body>
-  <header class="site-nav" role="navigation" aria-label="Site">
-    <a href="./" class="brand">Soundscapes</a>
-    <nav>
-      <span class="here">Painting with John</span>
-    </nav>
-  </header>
+  <nav>
+    <a class="nav-logo" href="/">Mark Walhimer</a>
+    <div class="nav-links">
+      <a href="/index.html">Installations</a>
+      <a href="/projects/index.html">Projects</a>
+      <a href="/sketches/index.html">Sketches</a>
+      <a href="/audio/" class="active">Soundscapes</a>
+      <a href="/bio/index.html">Bio / CV</a>
+      <a href="/contact/index.html">Contact</a>
+    </div>
+  </nav>
   <div id="gate">
     <div>
       <p>Generative soundtrack — bass drone, clarinet-like line, soft noise hits. Tap anywhere to start (browsers require a gesture for audio).</p>

@@ -4,125 +4,143 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Soundscapes — interactive synthesizers and listening experiments." />
-  <title>Soundscapes</title>
+  <title>Soundscapes — Mark Walhimer</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0c;
-      --text: rgba(255, 255, 255, 0.88);
-      --muted: rgba(255, 255, 255, 0.5);
-      --line: rgba(255, 255, 255, 0.1);
-      --accent: #c4a882;
+      --black:    #0a0a0a;
+      --offwhite: #f0ede6;
+      --dim:      #666660;
+      --rule:     #1e1e1e;
+      --accent:   #c8a882;
+      --border:   #2a2a2a;
+      --bright:   #f0f0f0;
     }
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      min-height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      line-height: 1.5;
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--black);
+      color: var(--offwhite);
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 300;
+      min-height: 100vh;
     }
-    .site-nav {
-      position: sticky;
-      top: 0;
-      z-index: 20;
+
+    nav {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.65rem 1.25rem;
-      border-bottom: 1px solid var(--line);
-      background: rgba(10, 10, 12, 0.92);
-      backdrop-filter: blur(10px);
+      align-items: stretch;
+      padding: 0 40px;
+      border-bottom: 1px solid var(--border);
     }
-    .site-nav a {
-      color: rgba(255, 255, 255, 0.75);
-      text-decoration: none;
-      font-size: 0.88rem;
-    }
-    .site-nav a:hover { color: #fff; }
-    .site-nav .brand {
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      color: var(--accent);
-    }
-    .site-nav .here {
-      color: #fff;
-      font-size: 0.88rem;
+    .nav-logo {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
       font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 22px 32px 22px 0;
+      margin-right: 8px;
+      border-right: 1px solid var(--border);
     }
-    .site-nav nav {
+    .nav-links { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+    .nav-links a {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--dim);
+      text-decoration: none;
+      padding: 22px 20px;
+      transition: color 0.15s;
       display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
       align-items: center;
     }
+    .nav-links a:hover { color: var(--bright); }
+    .nav-links a.active { color: var(--accent); border-bottom: 1px solid var(--accent); margin-bottom: -1px; }
+
     main {
-      max-width: 36rem;
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 2rem 1.25rem 3rem;
+      padding: 64px 48px 100px;
+      border-bottom: 1px solid var(--rule);
     }
     h1 {
-      font-size: 1.35rem;
-      font-weight: 600;
-      margin: 0 0 0.35rem;
-      letter-spacing: 0.02em;
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -0.025em;
+      margin-bottom: 20px;
     }
+    h1 em { font-style: italic; color: var(--accent); }
     .sub {
-      margin: 0 0 2rem;
-      font-size: 0.9rem;
-      color: var(--muted);
+      font-size: clamp(17px, 2vw, 21px);
+      font-weight: 300;
+      line-height: 1.7;
+      color: rgba(240, 237, 230, 0.85);
+      max-width: 680px;
+      margin-bottom: 40px;
     }
     ul {
       list-style: none;
       margin: 0;
       padding: 0;
+      max-width: 680px;
     }
     li {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      margin-bottom: 0.75rem;
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.03);
+      border-top: 1px solid var(--rule);
     }
+    li:last-child { border-bottom: 1px solid var(--rule); }
     li a {
       display: block;
-      padding: 1rem 1.1rem;
+      padding: 20px 0;
       color: inherit;
       text-decoration: none;
-      transition: background 0.15s ease;
+      transition: color 0.15s;
     }
-    li a:hover {
-      background: rgba(255, 255, 255, 0.06);
-    }
+    li a:hover .name { color: var(--accent); }
     .name {
-      font-weight: 600;
-      font-size: 1rem;
-      margin-bottom: 0.25rem;
+      font-size: clamp(17px, 2vw, 20px);
+      font-weight: 400;
+      margin-bottom: 6px;
+      color: var(--offwhite);
     }
     .desc {
-      font-size: 0.82rem;
-      color: var(--muted);
-      line-height: 1.4;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.6;
+      color: var(--dim);
     }
     .placeholder {
-      padding: 1rem 1.1rem;
-      border-style: dashed;
-      color: var(--muted);
-      font-size: 0.85rem;
+      padding: 20px 0;
+      font-size: 13px;
+      color: var(--dim);
+      line-height: 1.65;
+    }
+    .placeholder code {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
     }
   </style>
 </head>
 <body>
-  <header class="site-nav" role="navigation" aria-label="Site">
-    <span class="brand here">Soundscapes</span>
-    <nav>
-      <a href="./painting-with-john.html">Painting with John</a>
-    </nav>
-  </header>
+  <nav>
+    <a class="nav-logo" href="/">Mark Walhimer</a>
+    <div class="nav-links">
+      <a href="/index.html">Installations</a>
+      <a href="/projects/index.html">Projects</a>
+      <a href="/sketches/index.html">Sketches</a>
+      <a href="/audio/" class="active">Soundscapes</a>
+      <a href="/bio/index.html">Bio / CV</a>
+      <a href="/contact/index.html">Contact</a>
+    </div>
+  </nav>
+
   <main>
-    <h1>Soundscapes</h1>
-    <p class="sub">Choose a piece. Each page is self-contained — add new <code style="font-size:0.85em;">.html</code> files and link them here.</p>
+    <h1>Sound<em>scapes</em></h1>
+    <p class="sub">Choose a piece. Each page is self-contained — add new HTML files in this folder and link them below.</p>
     <ul>
       <li>
         <a href="./painting-with-john.html">
