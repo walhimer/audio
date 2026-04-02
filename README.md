@@ -11,7 +11,7 @@ The hub is [`index.html`](index.html); each piece lives in its own HTML file (or
 | Path | Description |
 |------|-------------|
 | [`index.html`](index.html) | Soundscapes hub — links to each piece. |
-| [`standalone.html`](standalone.html) | **Drone** — Tone.js harmonic drone synthesizer (multi-voice, presets, recorder UI). |
+| [`standalone.html`](standalone.html) | **Ambient** — Tone.js harmonic layers (multi-voice, presets, recorder UI). |
 | [`lib/tone.js`](lib/tone.js) | Bundled **Tone.js** for `standalone.html` (same build as Sync (Sequencer); no CDN). |
 | [`audio-with-john.html`](audio-with-john.html) | **Audio with John** — generative layer (p5 + p5.sound); start/stop, elapsed time, WAV record. |
 | [`painting-with-john.html`](painting-with-john.html) | Redirects to [`audio-with-john.html`](audio-with-john.html) (old URL). |
@@ -21,7 +21,7 @@ The hub is [`index.html`](index.html); each piece lives in its own HTML file (or
 
 ---
 
-## Drone (`standalone.html`)
+## Ambient (`standalone.html`)
 
 **File:** [`standalone.html`](standalone.html)
 
@@ -68,7 +68,7 @@ cd /path/to/this/repo
 python3 -m http.server 8080
 ```
 
-Then open e.g. `http://localhost:8080/`, `http://localhost:8080/standalone.html`, `http://localhost:8080/painting-with-john.html`, or `http://localhost:8080/sync-sequencer/`.
+Then open e.g. `http://localhost:8080/`, `http://localhost:8080/standalone.html`, `http://localhost:8080/audio-with-john.html`, or `http://localhost:8080/sync-sequencer/`.
 
 (Audio often fails on raw `file://` opens — use a local server.)
 
@@ -90,4 +90,4 @@ Push **`main`** to the remote used for **mark-walhimer.com** `/audio/` (or GitHu
 
 ## License
 
-Your code: your usual project terms. Audio with John and Drone use only synthesized audio (no sample packs). Sync (Sequencer)’s optional piano uses the public Salamander set documented by Tone.js for demos; check [Tone.js](https://tonejs.github.io/) / sample licensing if you redistribute that mode commercially.
+Your code: your usual project terms. Audio with John and Ambient (`standalone.html`) use only synthesized audio (no sample packs). Sync (Sequencer)’s optional piano uses the public Salamander set documented by Tone.js for demos; check [Tone.js](https://tonejs.github.io/) / sample licensing if you redistribute that mode commercially.

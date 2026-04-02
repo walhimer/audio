@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Drone · Mark Walhimer</title>
+    <title>Ambient · Mark Walhimer</title>
     <!--
       Tone.js is loaded from ./lib/tone.js (bundled in this repo) — no CDN required.
     -->
@@ -654,7 +654,7 @@
           }
         }
         
-        class DroneVoice {
+        class AmbientVoice {
           constructor(index) {
             this.index = index;
             this.osc = new Tone.Oscillator({
@@ -979,7 +979,7 @@
           }
         
           for (let i = 0; i < 8; i++) {
-            const voice = new DroneVoice(i);
+            const voice = new AmbientVoice(i);
             voice.output.connect(masterLimiter);
             voices.push(voice);
           }
@@ -1019,7 +1019,7 @@
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = `drone-mark-walhimer-${Date.now()}.${ext}`;
+          a.download = `ambient-mark-walhimer-${Date.now()}.${ext}`;
           a.click();
           URL.revokeObjectURL(url);
         }
@@ -1049,7 +1049,7 @@
             <div class="shell">
               <header class="top-bar">
                 <div class="title-block">
-                  <h1>Drone</h1>
+                  <h1>Ambient</h1>
                   <span class="byline">Mark Walhimer</span>
                 </div>
                 <div class="top-actions">
