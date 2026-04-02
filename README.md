@@ -1,6 +1,6 @@
-# Soundscapes (mark-walhimer.com/audio)
+# Ambient (mark-walhimer.com/audio)
 
-Static, **self-contained** pages for browser-based listening pieces: **vendored scripts** in-repo so the site works without relying on CDN availability (except where noted for optional remote samples).
+Static, **self-contained** pages for browser-based listening pieces: **vendored scripts** in-repo so the site works without relying on CDN availability (except where noted for optional remote samples). Hub and piece pages use **system fonts** only (no Google Fonts or other font CDNs).
 
 The hub is [`index.html`](index.html); each piece lives in its own HTML file (or subfolder).
 
@@ -10,7 +10,7 @@ The hub is [`index.html`](index.html); each piece lives in its own HTML file (or
 
 | Path | Description |
 |------|-------------|
-| [`index.html`](index.html) | Soundscapes hub — links to each piece. |
+| [`index.html`](index.html) | Ambient hub — links to each piece. |
 | [`painting-with-john.html`](painting-with-john.html) | Generative *Painting with John*–style layer (p5 + p5.sound). |
 | [`lib/p5.min.js`](lib/p5.min.js), [`lib/p5.sound.min.js`](lib/p5.sound.min.js) | **Vendored** p5 + p5.sound (no CDN required for this patch). |
 | [`sync-sequencer/`](sync-sequencer/) | **Sync (Sequencer)** — Tone.js app; [`sync-sequencer/tone.js`](sync-sequencer/tone.js) is the library (bundled). |
