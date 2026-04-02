@@ -13,7 +13,8 @@ The hub is [`index.html`](index.html); each piece lives in its own HTML file (or
 | [`index.html`](index.html) | Soundscapes hub — links to each piece. |
 | [`standalone.html`](standalone.html) | **Drone** — Tone.js harmonic drone synthesizer (multi-voice, presets, recorder UI). |
 | [`lib/tone.js`](lib/tone.js) | Bundled **Tone.js** for `standalone.html` (same build as Sync (Sequencer); no CDN). |
-| [`painting-with-john.html`](painting-with-john.html) | Generative *Painting with John*–style layer (p5 + p5.sound). |
+| [`audio-with-john.html`](audio-with-john.html) | **Audio with John** — generative layer (p5 + p5.sound); start/stop, elapsed time, WAV record. |
+| [`painting-with-john.html`](painting-with-john.html) | Redirects to [`audio-with-john.html`](audio-with-john.html) (old URL). |
 | [`lib/p5.min.js`](lib/p5.min.js), [`lib/p5.sound.min.js`](lib/p5.sound.min.js) | **Vendored** p5 + p5.sound (no CDN required for this patch). |
 | [`sync-sequencer/`](sync-sequencer/) | **Sync (Sequencer)** — Tone.js app; [`sync-sequencer/tone.js`](sync-sequencer/tone.js) is a second copy of the library (bundled). |
 | [`synths.html`](synths.html) | Redirect to the hub (legacy URL). |
@@ -30,20 +31,20 @@ An older **Vite + npm** scaffold for this project existed before commit `782d609
 
 ---
 
-## Painting with John
+## Audio with John
 
-**File:** [`painting-with-john.html`](painting-with-john.html)
+**File:** [`audio-with-john.html`](audio-with-john.html)
 
-Generative soundtrack: bass drone (sine), triangle “clarinet” line on a minor pentatonic, pink-noise hits, reverb. All **synthesized** (no samples).
+Generative soundtrack: bass drone (sine), triangle “clarinet” line on a minor pentatonic, pink-noise hits, reverb. **Start** / **Stop**, **elapsed** clock while playing, **Record** (p5 `SoundRecorder` → `audio-with-john.wav` download). All **synthesized** (no samples). Legacy URL [`painting-with-john.html`](painting-with-john.html) redirects here.
 
 ### Stack
 
 | Piece | Role |
 |--------|------|
-| **HTML / CSS** | Layout, site nav, tap-to-start overlay. |
-| **JavaScript** | Patch logic, timers, envelopes. |
+| **HTML / CSS** | Layout, site nav, one-time “Continue” for audio unlock, transport bar. |
+| **JavaScript** | Patch logic, timers, envelopes, recording. |
 | **[p5.js](https://p5js.org/)** | `setup` / `draw`, `random`, `midiToFreq`. |
-| **[p5.sound](https://p5js.org/reference/#/libraries/p5.sound)** | Oscillators, noise, reverb (built on **Web Audio** inside the library). |
+| **[p5.sound](https://p5js.org/reference/#/libraries/p5.sound)** | Oscillators, noise, reverb, `SoundRecorder` (built on **Web Audio** inside the library). |
 
 Scripts load from **`./lib/`** (committed in this repo), not from a CDN.
 
@@ -89,4 +90,4 @@ Push **`main`** to the remote used for **mark-walhimer.com** `/audio/` (or GitHu
 
 ## License
 
-Your code: your usual project terms. Painting with John and Drone use only synthesized audio (no sample packs). Sync (Sequencer)’s optional piano uses the public Salamander set documented by Tone.js for demos; check [Tone.js](https://tonejs.github.io/) / sample licensing if you redistribute that mode commercially.
+Your code: your usual project terms. Audio with John and Drone use only synthesized audio (no sample packs). Sync (Sequencer)’s optional piano uses the public Salamander set documented by Tone.js for demos; check [Tone.js](https://tonejs.github.io/) / sample licensing if you redistribute that mode commercially.

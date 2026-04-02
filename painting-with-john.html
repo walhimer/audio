@@ -2,234 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="refresh" content="0; url=./audio-with-john.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Generative p5.sound layer: bass drone, clarinet-like line, noise hits. Tap to start audio." />
-  <title>Painting with John — Soundscapes — Mark Walhimer</title>
+  <link rel="canonical" href="./audio-with-john.html" />
+  <title>Audio with John — redirect</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --black:    #0a0a0a;
-      --offwhite: #f0ede6;
-      --dim:      #666660;
-      --rule:     #1e1e1e;
-      --accent:   #c8a882;
-      --border:   #2a2a2a;
-      --bright:   #f0f0f0;
-    }
-    html { scroll-behavior: smooth; }
     body {
-      background: var(--black);
-      color: var(--offwhite);
-      font-family: Georgia, 'Times New Roman', serif;
-      font-weight: 300;
+      margin: 0;
       min-height: 100vh;
-    }
-
-    nav {
-      position: relative;
-      z-index: 10;
-      display: flex;
-      align-items: stretch;
-      padding: 0 40px;
-      border-bottom: 1px solid var(--border);
-      background: var(--black);
-    }
-    .nav-logo {
-      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--accent);
-      text-decoration: none;
-      padding: 22px 32px 22px 0;
-      margin-right: 8px;
-      border-right: 1px solid var(--border);
-    }
-    .nav-links { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
-    .nav-links a {
-      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 10px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--dim);
-      text-decoration: none;
-      padding: 22px 20px;
-      transition: color 0.15s;
-      display: flex;
-      align-items: center;
-    }
-    .nav-links a:hover { color: var(--bright); }
-    .nav-links a.active { color: var(--accent); border-bottom: 1px solid var(--accent); margin-bottom: -1px; }
-
-    #gate {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
+      background: #0a0a0a;
+      color: #f0ede6;
+      font-family: Georgia, serif;
       display: grid;
       place-items: center;
-      background: rgba(8, 8, 8, 0.88);
-      cursor: pointer;
-      font-family: Georgia, 'Times New Roman', serif;
+      padding: 24px;
     }
-    #gate > div {
-      padding: 88px 32px 32px;
-      text-align: center;
-      max-width: 36ch;
-    }
-    #gate p {
-      margin: 0 0 20px;
-      font-size: clamp(16px, 2.2vw, 19px);
-      font-weight: 300;
-      line-height: 1.65;
-      color: rgba(240, 237, 230, 0.88);
-    }
-    #gate button {
-      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 10px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      padding: 14px 24px;
-      border-radius: 0;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--accent);
-      cursor: pointer;
-      pointer-events: none;
-      transition: color 0.15s, border-color 0.15s;
-    }
-    #gate button:hover {
-      color: var(--bright);
-      border-color: var(--accent);
-    }
-    #gate.hidden {
-      display: none;
-    }
+    a { color: #c8a882; }
   </style>
 </head>
 <body>
-  <nav>
-    <a class="nav-logo" href="/">Mark Walhimer</a>
-    <div class="nav-links">
-      <a href="/index.html">Installations</a>
-      <a href="/projects/index.html">Projects</a>
-      <a href="/sketches/index.html">Sketches</a>
-      <a href="/audio/" class="active">Soundscapes</a>
-      <a href="/bio/index.html">Bio / CV</a>
-      <a href="/contact/index.html">Contact</a>
-    </div>
-  </nav>
-  <div id="gate">
-    <div>
-      <p>Generative soundtrack — bass drone, clarinet-like line, soft noise hits. Tap anywhere to start (browsers require a gesture for audio).</p>
-      <button type="button" id="go">Start audio</button>
-    </div>
-  </div>
-  <main></main>
-
-  <script src="./lib/p5.min.js"></script>
-  <script src="./lib/p5.sound.min.js"></script>
-  <script>
-  let bass, clarinet, percussion, reverb;
-  let notes = [48, 50, 53, 55, 57, 60];
-
-  function startPatch() {
-    reverb = new p5.Reverb();
-
-    bass = new p5.Oscillator("sine");
-    bass.freq(midiToFreq(random([36, 40, 43])));
-    bass.amp(0.05);
-    bass.start();
-    reverb.process(bass, 6, 0.5);
-
-    clarinet = new p5.Oscillator("triangle");
-    clarinet.amp(0.0);
-    clarinet.start();
-    reverb.process(clarinet, 5, 0.7);
-
-    percussion = new p5.Noise("pink");
-    percussion.amp(0.0);
-    percussion.start();
-    reverb.process(percussion, 2, 0.3);
-
-    setInterval(playClarinet, 4000);
-    setInterval(playPercussion, 7000);
-  }
-
-  function playClarinet() {
-    let n = random(notes);
-    clarinet.freq(midiToFreq(n));
-    clarinet.amp(0.1, 0.5);
-    setTimeout(() => {
-      clarinet.amp(0.0, 2);
-    }, 1500);
-  }
-
-  function playPercussion() {
-    percussion.amp(0.05, 0.01);
-    setTimeout(() => {
-      percussion.amp(0.0, 0.5);
-    }, 200);
-  }
-
-  function setup() {
-    noCanvas();
-  }
-
-  let audioStarted = false;
-  function beginAudioFromUserGesture() {
-    if (audioStarted) return;
-    audioStarted = true;
-    let gate = document.getElementById("gate");
-    if (gate) gate.classList.add("hidden");
-    if (typeof userStartAudio === "function") {
-      userStartAudio().then(startPatch).catch(() => {
-        if (typeof getAudioContext === "function") getAudioContext().resume();
-        startPatch();
-      });
-    } else {
-      if (typeof getAudioContext === "function") getAudioContext().resume();
-      startPatch();
-    }
-  }
-
-  function wireStartGate() {
-    let gate = document.getElementById("gate");
-    if (!gate || gate.dataset.wired === "1") return;
-    gate.dataset.wired = "1";
-    gate.addEventListener(
-      "click",
-      () => {
-        beginAudioFromUserGesture();
-      },
-      { once: true }
-    );
-    gate.addEventListener("keydown", function onGateKeydown(e) {
-      if (e.key !== "Enter" && e.key !== " ") return;
-      e.preventDefault();
-      gate.removeEventListener("keydown", onGateKeydown);
-      beginAudioFromUserGesture();
-    });
-    gate.setAttribute("tabindex", "0");
-    gate.setAttribute("role", "button");
-    gate.setAttribute("aria-label", "Start audio");
-  }
-
-  function scheduleWireStartGate() {
-    setTimeout(wireStartGate, 0);
-  }
-  if (document.readyState === "complete") {
-    scheduleWireStartGate();
-  } else {
-    window.addEventListener("load", scheduleWireStartGate);
-  }
-
-  function draw() {
-    if (!bass) return;
-    if (frameCount % 600 === 0) {
-      bass.freq(midiToFreq(random([36, 38, 41, 43])));
-    }
-  }
-  </script>
+  <p>This page moved. <a href="./audio-with-john.html">Open Audio with John</a>.</p>
 </body>
 </html>
