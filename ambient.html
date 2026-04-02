@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Generative p5.sound layer: bass drone, clarinet-like line, noise hits. Tap to start audio." />
-  <title>Painting with John — Soundscapes — Mark Walhimer</title>
+  <meta name="description" content="Ambient synthesizer — layered drones and reverb. Tap to start audio." />
+  <title>Ambient — Soundscapes — Mark Walhimer</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -75,7 +75,7 @@
     #gate > div {
       padding: 88px 32px 32px;
       text-align: center;
-      max-width: 36ch;
+      max-width: 40ch;
     }
     #gate p {
       margin: 0 0 20px;
@@ -98,12 +98,50 @@
       pointer-events: none;
       transition: color 0.15s, border-color 0.15s;
     }
-    #gate button:hover {
-      color: var(--bright);
-      border-color: var(--accent);
-    }
     #gate.hidden {
       display: none;
+    }
+
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 48px 40px 80px;
+    }
+    main h2 {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    main .lede {
+      font-size: clamp(15px, 1.8vw, 18px);
+      line-height: 1.65;
+      color: rgba(240, 237, 230, 0.82);
+      margin-bottom: 32px;
+      max-width: 42rem;
+    }
+    .controls {
+      border: 1px solid var(--border);
+      padding: 24px 28px;
+      background: rgba(20, 20, 20, 0.6);
+    }
+    .controls.hidden { display: none; }
+    .controls label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 20px;
+    }
+    .controls label:last-child { margin-bottom: 0; }
+    .controls input[type="range"] {
+      width: 100%;
+      max-width: 320px;
+      accent-color: var(--accent);
     }
   </style>
 </head>
@@ -121,55 +159,85 @@
   </nav>
   <div id="gate">
     <div>
-      <p>Generative soundtrack — bass drone, clarinet-like line, soft noise hits. Tap anywhere to start (browsers require a gesture for audio).</p>
+      <p>Layered sine drones, soft noise bed, and long reverb — adjust depth, air, and shimmer after you start. Tap anywhere (audio needs a gesture).</p>
       <button type="button" id="go">Start audio</button>
     </div>
   </div>
-  <main></main>
+  <main>
+    <h2>Ambient</h2>
+    <p class="lede">Self-contained p5.sound patch. No samples.</p>
+    <div id="controls" class="controls hidden" aria-hidden="true">
+      <label>
+        Depth (bass)
+        <input type="range" id="depth" min="0" max="100" value="35" />
+      </label>
+      <label>
+        Air (noise)
+        <input type="range" id="air" min="0" max="100" value="18" />
+      </label>
+      <label>
+        Shimmer (high layer)
+        <input type="range" id="shimmer" min="0" max="100" value="28" />
+      </label>
+    </div>
+  </main>
 
   <script src="./lib/p5.min.js"></script>
   <script src="./lib/p5.sound.min.js"></script>
   <script>
-  let bass, clarinet, percussion, reverb;
-  let notes = [48, 50, 53, 55, 57, 60];
+  let bass, highLayer, airNoise, reverb;
+  let baseMidi = 38;
+  let highMidi = 67;
+  let depth01 = 0.35;
+  let air01 = 0.18;
+  let shimmer01 = 0.28;
+  let t0 = 0;
+
+  function sliderTo01(id) {
+    const el = document.getElementById(id);
+    return el ? Number(el.value) / 100 : 0;
+  }
+
+  function applyLevels() {
+    depth01 = sliderTo01("depth");
+    air01 = sliderTo01("air");
+    shimmer01 = sliderTo01("shimmer");
+    if (bass) bass.amp(depth01 * 0.14, 0.05);
+    if (airNoise) airNoise.amp(air01 * 0.06, 0.05);
+    if (highLayer) highLayer.amp(shimmer01 * 0.09, 0.05);
+  }
 
   function startPatch() {
     reverb = new p5.Reverb();
 
     bass = new p5.Oscillator("sine");
-    bass.freq(midiToFreq(random([36, 40, 43])));
-    bass.amp(0.05);
+    bass.freq(midiToFreq(baseMidi));
+    bass.amp(depth01 * 0.14);
     bass.start();
-    reverb.process(bass, 6, 0.5);
+    reverb.process(bass, 9, 0.55);
 
-    clarinet = new p5.Oscillator("triangle");
-    clarinet.amp(0.0);
-    clarinet.start();
-    reverb.process(clarinet, 5, 0.7);
+    highLayer = new p5.Oscillator("sine");
+    highLayer.freq(midiToFreq(highMidi));
+    highLayer.amp(shimmer01 * 0.09);
+    highLayer.start();
+    reverb.process(highLayer, 7, 0.5);
 
-    percussion = new p5.Noise("pink");
-    percussion.amp(0.0);
-    percussion.start();
-    reverb.process(percussion, 2, 0.3);
+    airNoise = new p5.Noise("pink");
+    airNoise.amp(air01 * 0.06);
+    airNoise.start();
+    reverb.process(airNoise, 5, 0.35);
 
-    setInterval(playClarinet, 4000);
-    setInterval(playPercussion, 7000);
-  }
+    ["depth", "air", "shimmer"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", applyLevels);
+    });
 
-  function playClarinet() {
-    let n = random(notes);
-    clarinet.freq(midiToFreq(n));
-    clarinet.amp(0.1, 0.5);
-    setTimeout(() => {
-      clarinet.amp(0.0, 2);
-    }, 1500);
-  }
-
-  function playPercussion() {
-    percussion.amp(0.05, 0.01);
-    setTimeout(() => {
-      percussion.amp(0.0, 0.5);
-    }, 200);
+    const panel = document.getElementById("controls");
+    if (panel) {
+      panel.classList.remove("hidden");
+      panel.setAttribute("aria-hidden", "false");
+    }
+    t0 = millis() / 1000;
   }
 
   function setup() {
@@ -180,21 +248,24 @@
   function beginAudioFromUserGesture() {
     if (audioStarted) return;
     audioStarted = true;
-    let gate = document.getElementById("gate");
+    const gate = document.getElementById("gate");
     if (gate) gate.classList.add("hidden");
+    const run = () => {
+      startPatch();
+    };
     if (typeof userStartAudio === "function") {
-      userStartAudio().then(startPatch).catch(() => {
+      userStartAudio().then(run).catch(() => {
         if (typeof getAudioContext === "function") getAudioContext().resume();
-        startPatch();
+        run();
       });
     } else {
       if (typeof getAudioContext === "function") getAudioContext().resume();
-      startPatch();
+      run();
     }
   }
 
   function wireStartGate() {
-    let gate = document.getElementById("gate");
+    const gate = document.getElementById("gate");
     if (!gate || gate.dataset.wired === "1") return;
     gate.dataset.wired = "1";
     gate.addEventListener(
@@ -226,8 +297,14 @@
 
   function draw() {
     if (!bass) return;
-    if (frameCount % 600 === 0) {
-      bass.freq(midiToFreq(random([36, 38, 41, 43])));
+    const t = millis() / 1000 - t0;
+    const wobble = Math.sin(t * 0.09) * 0.35 + Math.sin(t * 0.031) * 0.2;
+    bass.freq(midiToFreq(baseMidi + wobble));
+    const drift = Math.sin(t * 0.043) * 2.2;
+    highLayer.freq(midiToFreq(highMidi + drift));
+    if (frameCount % 480 === 0) {
+      baseMidi = random([36, 38, 41, 43]);
+      highMidi = random([64, 67, 69, 72, 74]);
     }
   }
   </script>

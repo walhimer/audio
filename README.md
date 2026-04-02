@@ -1,4 +1,4 @@
-# Ambient (mark-walhimer.com/audio)
+# Soundscapes (mark-walhimer.com/audio)
 
 Static, **self-contained** pages for browser-based listening pieces: **vendored scripts** in-repo so the site works without relying on CDN availability (except where noted for optional remote samples). Hub and piece pages use **system fonts** only (no Google Fonts or other font CDNs).
 
@@ -10,8 +10,9 @@ The hub is [`index.html`](index.html); each piece lives in its own HTML file (or
 
 | Path | Description |
 |------|-------------|
-| [`index.html`](index.html) | Ambient hub — links to each piece. |
+| [`index.html`](index.html) | Soundscapes hub — links to each piece. |
 | [`painting-with-john.html`](painting-with-john.html) | Generative *Painting with John*–style layer (p5 + p5.sound). |
+| [`ambient.html`](ambient.html) | **Ambient** — layered drones, noise, shimmer; sliders (p5 + p5.sound). |
 | [`lib/p5.min.js`](lib/p5.min.js), [`lib/p5.sound.min.js`](lib/p5.sound.min.js) | **Vendored** p5 + p5.sound (no CDN required for this patch). |
 | [`sync-sequencer/`](sync-sequencer/) | **Sync (Sequencer)** — Tone.js app; [`sync-sequencer/tone.js`](sync-sequencer/tone.js) is the library (bundled). |
 | [`synths.html`](synths.html) | Redirect to the hub (legacy URL). |
@@ -37,6 +38,14 @@ Scripts load from **`./lib/`** (committed in this repo), not from a CDN.
 
 ---
 
+## Ambient
+
+**File:** [`ambient.html`](ambient.html)
+
+Synthesizer-style patch: two sine layers (bass + high shimmer), pink noise, long reverb. Sliders control depth, air, and shimmer; slow drift and occasional scale shifts. All **synthesized** (no samples).
+
+---
+
 ## Sync (Sequencer) (Tone.js)
 
 **Entry:** [`sync-sequencer/index.html`](sync-sequencer/index.html)
@@ -55,7 +64,7 @@ cd /path/to/this/repo
 python3 -m http.server 8080
 ```
 
-Then open e.g. `http://localhost:8080/`, `http://localhost:8080/painting-with-john.html`, or `http://localhost:8080/sync-sequencer/`.
+Then open e.g. `http://localhost:8080/`, `http://localhost:8080/painting-with-john.html`, `http://localhost:8080/ambient.html`, or `http://localhost:8080/sync-sequencer/`.
 
 (Audio often fails on raw `file://` opens — use a local server.)
 
@@ -77,4 +86,4 @@ Push **`main`** to the remote used for **mark-walhimer.com** `/audio/` (or GitHu
 
 ## License
 
-Your code: your usual project terms. Painting with John uses only synthesized audio (no sample packs). Sync (Sequencer)’s optional piano uses the public Salamander set documented by Tone.js for demos; check [Tone.js](https://tonejs.github.io/) / sample licensing if you redistribute that mode commercially.
+Your code: your usual project terms. Painting with John and Ambient use only synthesized audio (no sample packs). Sync (Sequencer)’s optional piano uses the public Salamander set documented by Tone.js for demos; check [Tone.js](https://tonejs.github.io/) / sample licensing if you redistribute that mode commercially.
