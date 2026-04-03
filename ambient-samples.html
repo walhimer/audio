@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ambient Samples</title>
+  <style>
+    :root {
+      --bg: #0c0f12;
+      --panel: #141a21;
+      --border: #2a3544;
+      --text: #e8ecf1;
+      --muted: #8b98a8;
+      --accent: #c9a227;
+      --accent-dim: #8a7020;
+      --ok: #3d9a6a;
+      --danger: #c45c5c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background:
+        radial-gradient(ellipse 120% 80% at 10% 0%, #1a2330 0%, transparent 50%),
+        radial-gradient(ellipse 80% 60% at 90% 100%, #152028 0%, transparent 45%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.25rem;
+    }
+    h1 {
+      font-family: ui-serif, Georgia, "Times New Roman", serif;
+      font-weight: 600;
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 52ch;
+    }
+    .grid {
+      display: grid;
+      gap: 1rem;
+    }
+    @media (min-width: 900px) {
+      .grid-voices { grid-template-columns: repeat(2, 1fr); }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+    .card h2 {
+      font-family: ui-serif, Georgia, "Times New Roman", serif;
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    input[type="file"] { font-size: 0.8rem; max-width: 100%; }
+    .val {
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      font-size: 0.8rem;
+      float: right;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--accent-dim); }
+    button.primary {
+      background: linear-gradient(180deg, #3d7a5c 0%, #2d5f45 100%);
+      border-color: #4a9d78;
+      font-weight: 600;
+    }
+    button.primary:hover { filter: brightness(1.08); }
+    button.danger {
+      border-color: var(--danger);
+      color: #f0a0a0;
+    }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .meter {
+      height: 6px;
+      background: #0a0c0f;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .meter > div {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+      transition: width 0.05s linear;
+    }
+    .hint { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; }
+    .voice-off { opacity: 0.55; }
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .toggle input { accent-color: var(--accent); }
+    .attribution {
+      margin: 0.85rem 0 0;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--muted);
+      max-width: 58ch;
+      line-height: 1.5;
+    }
+    .attribution strong { color: #a8b0ba; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Ambient Samples</h1>
+      <p>
+        Load your own samples and shape overlapping grains, random pitch and stereo spread, and slow filter motion into a drifting texture. Open this file in your browser; everything runs locally on your machine.
+      </p>
+      <p class="attribution">
+        <strong>Salamander Grand Piano.</strong> If you load samples from the Salamander Grand Piano library (e.g. individual <code>.wav</code> note files), that work is by <strong>Alexander Holm</strong>, licensed under <strong>CC BY</strong> (see the library’s README and SFZ). Keep the required credit when you share recordings or projects that use those samples.
+      </p>
+    </header>
+
+    <div class="toolbar">
+      <button type="button" class="primary" id="btnStart">Start audio</button>
+      <button type="button" id="btnStop" disabled>Stop</button>
+      <button type="button" id="btnRec" disabled>Record</button>
+      <span class="hint" id="status">Click Start, then load samples.</span>
+    </div>
+
+    <div class="card" style="margin-bottom: 1rem;">
+      <h2>Master</h2>
+      <div class="row">
+        <div>
+          <label>Volume <span class="val" id="vMasterVol"></span></label>
+          <input type="range" id="masterVol" min="0" max="1" step="0.01" value="0.7" />
+        </div>
+        <div>
+          <label>Filter cutoff <span class="val" id="vFilterHz"></span></label>
+          <input type="range" id="filterHz" min="200" max="12000" step="10" value="8000" />
+        </div>
+      </div>
+      <div class="row" style="margin-top: 0.65rem;">
+        <div>
+          <label>LFO → filter <span class="val" id="vLfoDepth"></span></label>
+          <input type="range" id="lfoDepth" min="0" max="4000" step="20" value="800" />
+        </div>
+        <div>
+          <label>LFO rate (Hz) <span class="val" id="vLfoRate"></span></label>
+          <input type="range" id="lfoRate" min="0.02" max="2" step="0.01" value="0.12" />
+        </div>
+      </div>
+      <div class="row" style="margin-top: 0.65rem;">
+        <div>
+          <label>Delay time <span class="val" id="vDelayTime"></span></label>
+          <input type="range" id="delayTime" min="0.05" max="1.2" step="0.01" value="0.35" />
+        </div>
+        <div>
+          <label>Delay feedback <span class="val" id="vDelayFb"></span></label>
+          <input type="range" id="delayFb" min="0" max="0.85" step="0.01" value="0.4" />
+        </div>
+      </div>
+      <div class="row" style="margin-top: 0.65rem;">
+        <div>
+          <label>Reverb mix <span class="val" id="vReverb"></span></label>
+          <input type="range" id="reverbMix" min="0" max="1" step="0.01" value="0.35" />
+        </div>
+        <div>
+          <label>Output level</label>
+          <div class="meter"><div id="meterBar"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-voices" id="voices"></div>
+  </div>
+
+  <script>
+    const NUM_VOICES = 4;
+
+    /** @type {AudioContext | null} */
+    let ctx = null;
+    /** @type {GainNode | null} */
+    let masterGain = null;
+    /** @type {BiquadFilterNode | null} */
+    let filterNode = null;
+    /** @type {OscillatorNode | null} */
+    let lfo = null;
+    /** @type {GainNode | null} */
+    let lfoGain = null;
+    /** @type {DelayNode | null} */
+    let delayNode = null;
+    /** @type {GainNode | null} */
+    let delayFbGain = null;
+    /** @type {ConvolverNode | null} */
+    let reverbNode = null;
+    /** @type {GainNode | null} */
+    let dryGain = null;
+    /** @type {GainNode | null} */
+    let wetGain = null;
+
+    /** @type {MediaStreamAudioDestinationNode | null} */
+    let recDest = null;
+    /** @type {MediaRecorder | null} */
+    let mediaRecorder = null;
+    /** @type {Blob[]} */
+    let recChunks = [];
+
+    const voices = [];
+
+    function makeImpulseBuffer(context, seconds, decay) {
+      const rate = context.sampleRate;
+      const length = rate * seconds;
+      const buf = context.createBuffer(2, length, rate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = buf.getChannelData(ch);
+        for (let i = 0; i < length; i++) {
+          d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+        }
+      }
+      return buf;
+    }
+
+    function initGraph() {
+      if (ctx) return;
+      ctx = new AudioContext({ sampleRate: 48000 });
+      masterGain = ctx.createGain();
+      masterGain.gain.value = 0.7;
+
+      filterNode = ctx.createBiquadFilter();
+      filterNode.type = "lowpass";
+      filterNode.frequency.value = 8000;
+      filterNode.Q.value = 0.7;
+
+      lfo = ctx.createOscillator();
+      lfo.type = "sine";
+      lfo.frequency.value = 0.12;
+      lfoGain = ctx.createGain();
+      lfoGain.gain.value = 800;
+      lfo.connect(lfoGain);
+      lfoGain.connect(filterNode.frequency);
+
+      delayNode = ctx.createDelay(2);
+      delayNode.delayTime.value = 0.35;
+      delayFbGain = ctx.createGain();
+      delayFbGain.gain.value = 0.4;
+      const delayIn = ctx.createGain();
+      const delayOut = ctx.createGain();
+
+      reverbNode = ctx.createConvolver();
+      reverbNode.buffer = makeImpulseBuffer(ctx, 3.2, 3);
+
+      dryGain = ctx.createGain();
+      wetGain = ctx.createGain();
+      dryGain.gain.value = 0.65;
+      wetGain.gain.value = 0.35;
+
+      masterGain.connect(filterNode);
+      filterNode.connect(delayIn);
+      delayIn.connect(delayNode);
+      delayNode.connect(delayOut);
+      delayOut.connect(delayFbGain);
+      delayFbGain.connect(delayIn);
+      delayOut.connect(dryGain);
+      delayOut.connect(reverbNode);
+      reverbNode.connect(wetGain);
+      dryGain.connect(ctx.destination);
+      wetGain.connect(ctx.destination);
+
+      recDest = ctx.createMediaStreamDestination();
+      dryGain.connect(recDest);
+      wetGain.connect(recDest);
+
+      lfo.start();
+
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      masterGain.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      function tickMeter() {
+        if (!ctx) return;
+        analyser.getByteFrequencyData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) sum += data[i];
+        const avg = sum / data.length / 255;
+        const bar = document.getElementById("meterBar");
+        if (bar) bar.style.width = `${Math.min(100, avg * 280)}%`;
+        requestAnimationFrame(tickMeter);
+      }
+      tickMeter();
+    }
+
+    function setReverbWet(mix) {
+      if (!dryGain || !wetGain) return;
+      const m = Math.max(0, Math.min(1, mix));
+      dryGain.gain.value = 1 - m * 0.85;
+      wetGain.gain.value = m * 0.9;
+    }
+
+    class Voice {
+      constructor(index) {
+        this.index = index;
+        /** @type {AudioBuffer | null} */
+        this.buffer = null;
+        this.enabled = true;
+        this.volume = 0.55;
+        this.sliceStart = 0;
+        this.sliceEnd = 1;
+        this.grainMs = 180;
+        this.density = 4;
+        this.pitchSpread = 0.12;
+        this.panSpread = 0.6;
+        /** @type {number | null} */
+        this.timer = null;
+      }
+
+      scheduleNext() {
+        if (!ctx || !this.buffer || !this.enabled) return;
+        const dur = this.buffer.duration;
+        if (dur <= 0.05) return;
+
+        const s0 = this.sliceStart * dur;
+        const s1 = Math.max(s0 + 0.02, this.sliceEnd * dur);
+        const span = s1 - s0;
+        const startOffset = s0 + Math.random() * (span - 0.02);
+        const grainSec = Math.min(this.grainMs / 1000, dur - startOffset, 1.5);
+        if (grainSec < 0.02) return;
+
+        const t = ctx.currentTime;
+        const src = ctx.createBufferSource();
+        src.buffer = this.buffer;
+        const semis = (Math.random() * 2 - 1) * this.pitchSpread * 12;
+        src.playbackRate.value = Math.pow(2, semis / 12);
+
+        const pan = (Math.random() * 2 - 1) * this.panSpread;
+        let panner;
+        if (ctx.createStereoPanner) {
+          panner = ctx.createStereoPanner();
+          panner.pan.value = Math.max(-1, Math.min(1, pan));
+        } else {
+          panner = ctx.createGain();
+          panner.gain.value = 0.7;
+        }
+
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(this.volume, t + grainSec * 0.15);
+        g.gain.linearRampToValueAtTime(this.volume * 0.85, t + grainSec * 0.5);
+        g.gain.linearRampToValueAtTime(0, t + grainSec);
+
+        src.connect(g);
+        g.connect(panner);
+        panner.connect(masterGain);
+
+        try {
+          src.start(t, startOffset, grainSec);
+          src.stop(t + grainSec + 0.02);
+        } catch (_) {}
+
+        const baseMs = 1000 / Math.max(0.2, this.density);
+        const jitter = baseMs * (0.35 + Math.random() * 0.65);
+        this.timer = window.setTimeout(() => this.scheduleNext(), jitter);
+      }
+
+      start() {
+        this.stop();
+        if (!ctx || !this.buffer || !this.enabled) return;
+        this.scheduleNext();
+      }
+
+      stop() {
+        if (this.timer != null) {
+          clearTimeout(this.timer);
+          this.timer = null;
+        }
+      }
+    }
+
+    function buildUI() {
+      const root = document.getElementById("voices");
+      for (let i = 0; i < NUM_VOICES; i++) {
+        const v = new Voice(i);
+        voices.push(v);
+
+        const el = document.createElement("div");
+        el.className = "card";
+        el.id = `voice-${i}`;
+        el.innerHTML = `
+          <h2>
+            Voice ${i + 1}
+            <label class="toggle"><input type="checkbox" data-voice="${i}" class="voice-en" checked /> On</label>
+          </h2>
+          <div style="margin-bottom:0.65rem;">
+            <label>Sample</label>
+            <input type="file" accept="audio/*" data-voice="${i}" class="voice-file" />
+          </div>
+          <div class="row">
+            <div>
+              <label>Volume <span class="val voice-val-vol" data-i="${i}"></span></label>
+              <input type="range" class="voice-vol" data-i="${i}" min="0" max="1" step="0.01" value="0.55" />
+            </div>
+            <div>
+              <label>Density (grains/s) <span class="val voice-val-den" data-i="${i}"></span></label>
+              <input type="range" class="voice-den" data-i="${i}" min="0.3" max="16" step="0.1" value="${3 + i * 0.8}" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:0.65rem;">
+            <div>
+              <label>Grain length (ms) <span class="val voice-val-grain" data-i="${i}"></span></label>
+              <input type="range" class="voice-grain" data-i="${i}" min="40" max="900" step="10" value="${140 + i * 35}" />
+            </div>
+            <div>
+              <label>Slice start <span class="val voice-val-s0" data-i="${i}"></span></label>
+              <input type="range" class="voice-s0" data-i="${i}" min="0" max="0.95" step="0.01" value="0" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:0.65rem;">
+            <div>
+              <label>Slice end <span class="val voice-val-s1" data-i="${i}"></span></label>
+              <input type="range" class="voice-s1" data-i="${i}" min="0.05" max="1" step="0.01" value="1" />
+            </div>
+            <div>
+              <label>Pitch spread (± oct fraction) <span class="val voice-val-pitch" data-i="${i}"></span></label>
+              <input type="range" class="voice-pitch" data-i="${i}" min="0" max="0.5" step="0.01" value="${0.08 + i * 0.02}" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:0.65rem;">
+            <div>
+              <label>Pan spread <span class="val voice-val-pan" data-i="${i}"></span></label>
+              <input type="range" class="voice-pan" data-i="${i}" min="0" max="1" step="0.01" value="0.55" />
+            </div>
+          </div>
+        `;
+        root.appendChild(el);
+      }
+
+      document.querySelectorAll(".voice-file").forEach((inp) => {
+        inp.addEventListener("change", async (e) => {
+          const file = e.target.files && e.target.files[0];
+          const idx = +e.target.dataset.voice;
+          if (!file) return;
+          initGraph();
+          const ab = await file.arrayBuffer();
+          const buf = await ctx.decodeAudioData(ab.slice(0));
+          voices[idx].buffer = buf;
+          document.getElementById(`voice-${idx}`).classList.remove("voice-off");
+          setStatus(`Loaded on voice ${idx + 1}: ${file.name}`);
+          if (ctx.state === "running" && document.getElementById("btnStop").disabled === false) {
+            voices[idx].start();
+          }
+        });
+      });
+
+      const spanForKey = {
+        volume: "voice-val-vol",
+        density: "voice-val-den",
+        grainMs: "voice-val-grain",
+        sliceStart: "voice-val-s0",
+        sliceEnd: "voice-val-s1",
+        pitchSpread: "voice-val-pitch",
+        panSpread: "voice-val-pan",
+      };
+
+      function bindRange(sel, key, fmt) {
+        document.querySelectorAll(sel).forEach((inp) => {
+          const i = +inp.dataset.i;
+          const sc = spanForKey[key];
+          const update = () => {
+            const val = parseFloat(inp.value);
+            voices[i][key] = val;
+            const span = document.querySelector(`.${sc}[data-i="${i}"]`);
+            if (span) span.textContent = fmt(val);
+          };
+          inp.addEventListener("input", update);
+          update();
+        });
+      }
+
+      bindRange(".voice-vol", "volume", (v) => v.toFixed(2));
+      bindRange(".voice-den", "density", (v) => v.toFixed(1));
+      bindRange(".voice-grain", "grainMs", (v) => Math.round(v) + " ms");
+      bindRange(".voice-s0", "sliceStart", (v) => (v * 100).toFixed(0) + "%");
+      bindRange(".voice-s1", "sliceEnd", (v) => (v * 100).toFixed(0) + "%");
+      bindRange(".voice-pitch", "pitchSpread", (v) => v.toFixed(2));
+      bindRange(".voice-pan", "panSpread", (v) => v.toFixed(2));
+
+      document.querySelectorAll(".voice-en").forEach((cb) => {
+        cb.addEventListener("change", (e) => {
+          const idx = +e.target.dataset.voice;
+          voices[idx].enabled = e.target.checked;
+          document.getElementById(`voice-${idx}`).classList.toggle("voice-off", !e.target.checked);
+          if (ctx && ctx.state === "running" && !document.getElementById("btnStop").disabled) {
+            if (e.target.checked) voices[idx].start();
+            else voices[idx].stop();
+          }
+        });
+      });
+    }
+
+    function setStatus(t) {
+      const s = document.getElementById("status");
+      if (s) s.textContent = t;
+    }
+
+    function wireMaster() {
+      const mv = document.getElementById("masterVol");
+      const fh = document.getElementById("filterHz");
+      const ld = document.getElementById("lfoDepth");
+      const lr = document.getElementById("lfoRate");
+      const dt = document.getElementById("delayTime");
+      const df = document.getElementById("delayFb");
+      const rm = document.getElementById("reverbMix");
+
+      function upd() {
+        if (masterGain) masterGain.gain.value = parseFloat(mv.value);
+        if (filterNode) filterNode.frequency.value = parseFloat(fh.value);
+        if (lfoGain) lfoGain.gain.value = parseFloat(ld.value);
+        if (lfo) lfo.frequency.value = parseFloat(lr.value);
+        if (delayNode) delayNode.delayTime.value = parseFloat(dt.value);
+        if (delayFbGain) delayFbGain.gain.value = parseFloat(df.value);
+        setReverbWet(parseFloat(rm.value));
+
+        document.getElementById("vMasterVol").textContent = parseFloat(mv.value).toFixed(2);
+        document.getElementById("vFilterHz").textContent = Math.round(fh.value) + " Hz";
+        document.getElementById("vLfoDepth").textContent = Math.round(ld.value) + " Hz";
+        document.getElementById("vLfoRate").textContent = parseFloat(lr.value).toFixed(2);
+        document.getElementById("vDelayTime").textContent = parseFloat(dt.value).toFixed(2) + " s";
+        document.getElementById("vDelayFb").textContent = parseFloat(df.value).toFixed(2);
+        document.getElementById("vReverb").textContent = parseFloat(rm.value).toFixed(2);
+      }
+      [mv, fh, ld, lr, dt, df, rm].forEach((x) => x.addEventListener("input", upd));
+      upd();
+    }
+
+    document.getElementById("btnStart").addEventListener("click", async () => {
+      initGraph();
+      await ctx.resume();
+      document.getElementById("btnStart").disabled = true;
+      document.getElementById("btnStop").disabled = false;
+      document.getElementById("btnRec").disabled = false;
+      voices.forEach((v) => {
+        if (v.buffer && v.enabled) v.start();
+      });
+      setStatus("Audio on. Load samples on each voice or adjust the master section.");
+    });
+
+    document.getElementById("btnStop").addEventListener("click", () => {
+      voices.forEach((v) => v.stop());
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
+      document.getElementById("btnStart").disabled = false;
+      document.getElementById("btnStop").disabled = true;
+      document.getElementById("btnRec").disabled = true;
+      setStatus("Stopped.");
+    });
+
+    document.getElementById("btnRec").addEventListener("click", () => {
+      if (!recDest || !ctx) return;
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        setStatus("Encoding…");
+        return;
+      }
+      recChunks = [];
+      const stream = recDest.stream;
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "audio/webm";
+      mediaRecorder = new MediaRecorder(stream, { mimeType: mime });
+      mediaRecorder.ondataavailable = (ev) => {
+        if (ev.data.size) recChunks.push(ev.data);
+      };
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recChunks, { type: mime });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `ambient-samples-${Date.now()}.webm`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        setStatus("Recording saved to your downloads folder.");
+      };
+      mediaRecorder.start(200);
+      setStatus("Recording… press Record again to stop and save.");
+    });
+
+    buildUI();
+    wireMaster();
+  </script>
+</body>
+</html>
