@@ -179,7 +179,8 @@
       <button type="button" class="primary" id="btnStart">Start audio</button>
       <button type="button" id="btnStop" disabled>Stop</button>
       <button type="button" id="btnRec" disabled>Record</button>
-      <span class="hint" id="status">Click Start, then load samples.</span>
+      <button type="button" id="btnDemoPiano">Load demo piano</button>
+      <span class="hint" id="status">Start audio, then load demo or your own samples.</span>
     </div>
 
     <div class="card" style="margin-bottom: 1rem;">
@@ -607,6 +608,45 @@
       document.getElementById("btnStop").disabled = true;
       document.getElementById("btnRec").disabled = true;
       setStatus("Stopped.");
+    });
+
+    /** Paths relative to this HTML file (same folder on GitHub / your site). */
+    const DEMO_SALAMANDER_WAVS = [
+      "salamander-demo/C4v8.wav",
+      "salamander-demo/Dsharp4v8.wav",
+      "salamander-demo/Fsharp4v8.wav",
+      "salamander-demo/A4v8.wav",
+    ];
+
+    document.getElementById("btnDemoPiano").addEventListener("click", async () => {
+      if (window.location.protocol === "file:") {
+        setStatus(
+          "Demo files load only when this page is served from the web (HTTP/HTTPS), not when opened as a local file.",
+        );
+        return;
+      }
+      initGraph();
+      setStatus("Loading demo samples…");
+      try {
+        for (let i = 0; i < 4; i++) {
+          const res = await fetch(new URL(DEMO_SALAMANDER_WAVS[i], document.baseURI), {
+            cache: "force-cache",
+          });
+          if (!res.ok) throw new Error(`${DEMO_SALAMANDER_WAVS[i]}: ${res.status}`);
+          const ab = await res.arrayBuffer();
+          const buf = await ctx.decodeAudioData(ab.slice(0));
+          voices[i].buffer = buf;
+          document.getElementById(`voice-${i}`).classList.remove("voice-off");
+        }
+        setStatus(
+          "Demo loaded: C4, D♯4, F♯4, A4 on voices 1–4 (Salamander, CC BY). Press Start audio if you have not yet.",
+        );
+        if (ctx.state === "running" && document.getElementById("btnStop").disabled === false) {
+          for (let i = 0; i < 4; i++) voices[i].start();
+        }
+      } catch (err) {
+        setStatus("Demo load failed: " + (err && err.message ? err.message : String(err)));
+      }
     });
 
     document.getElementById("btnRec").addEventListener("click", () => {
