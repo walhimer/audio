@@ -161,6 +161,16 @@
       line-height: 1.5;
     }
     .attribution strong { color: #a8b0ba; font-weight: 600; }
+    .voice-sample-caption {
+      margin: 0.4rem 0 0;
+      font-size: 0.84rem;
+      color: var(--accent);
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+    .voice-sample-caption:empty {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -448,6 +458,7 @@
           <div style="margin-bottom:0.65rem;">
             <label>Sample</label>
             <input type="file" accept="audio/*" data-voice="${i}" class="voice-file" />
+            <p class="voice-sample-caption" data-voice-caption="${i}"></p>
           </div>
           <div class="row">
             <div>
@@ -499,6 +510,8 @@
           const buf = await ctx.decodeAudioData(ab.slice(0));
           voices[idx].buffer = buf;
           document.getElementById(`voice-${idx}`).classList.remove("voice-off");
+          const cap = document.querySelector(`[data-voice-caption="${idx}"]`);
+          if (cap) cap.textContent = `Custom: ${file.name}`;
           setStatus(`Loaded on voice ${idx + 1}: ${file.name}`);
           if (ctx.state === "running" && document.getElementById("btnStop").disabled === false) {
             voices[idx].start();
@@ -617,6 +630,8 @@
       "salamander-demo/Fsharp4v8.wav",
       "salamander-demo/A4v8.wav",
     ];
+    /** Display names for each demo voice (same order as DEMO_SALAMANDER_WAVS). */
+    const DEMO_PIANO_NOTE_LABELS = ["C4", "D♯4", "F♯4", "A4"];
 
     document.getElementById("btnDemoPiano").addEventListener("click", async () => {
       if (window.location.protocol === "file:") {
@@ -637,6 +652,10 @@
           const buf = await ctx.decodeAudioData(ab.slice(0));
           voices[i].buffer = buf;
           document.getElementById(`voice-${i}`).classList.remove("voice-off");
+          const cap = document.querySelector(`[data-voice-caption="${i}"]`);
+          if (cap) {
+            cap.textContent = `Piano note: ${DEMO_PIANO_NOTE_LABELS[i]} · Salamander demo`;
+          }
         }
         setStatus(
           "Demo loaded: C4, D♯4, F♯4, A4 on voices 1–4 (Salamander, CC BY). Press Start audio if you have not yet.",
