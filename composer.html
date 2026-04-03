@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Combine a visual sketch URL and a Soundscapes audio URL in one page for OBS or listening." />
+  <title>Composer — Soundscapes</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #121212;
+      --border: #2a2a2a;
+      --text: #f0ede6;
+      --muted: #8a8680;
+      --accent: #c8a882;
+      --err: #c97a6a;
+      font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .composer-chrome {
+      flex-shrink: 0;
+      padding: 1.25rem clamp(1rem, 3vw, 2rem);
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .composer-chrome h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 400;
+      font-size: 1.5rem;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+    .composer-chrome .lede {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 42rem;
+      margin-bottom: 1rem;
+    }
+    .composer-chrome .lede code {
+      font-size: 0.8rem;
+      background: var(--bg);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 0.75rem;
+      max-width: 52rem;
+    }
+    label.field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    label.field input[type="url"] {
+      font-size: 0.9rem;
+      padding: 0.5rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      width: 100%;
+    }
+    label.field input:focus {
+      outline: 1px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+    button, .link-btn {
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      font-family: inherit;
+    }
+    button.primary {
+      background: #2a2620;
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    button:hover, .link-btn:hover { border-color: var(--muted); }
+    button.primary:hover { filter: brightness(1.08); }
+
+    .opts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .opts label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+    .opts select {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.35rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .msg {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--err);
+      min-height: 1.2em;
+    }
+    .msg.ok { color: var(--accent); }
+    .hint {
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 44rem;
+    }
+
+    /* Stage */
+    .stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: #000;
+    }
+    .stage.layout-split {
+      flex-direction: row;
+    }
+    .stage.layout-split .visual-pane {
+      flex: 3;
+      min-width: 0;
+    }
+    .stage.layout-split .audio-pane {
+      flex: 2;
+      min-width: 200px;
+      height: auto;
+      border-top: none;
+      border-left: 1px solid var(--border);
+    }
+
+    .pane {
+      position: relative;
+      min-height: 0;
+    }
+    .visual-pane {
+      flex: 1;
+    }
+    .audio-pane {
+      height: var(--audio-h, 28vh);
+      min-height: 140px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .pane-label {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      z-index: 2;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(240, 237, 230, 0.35);
+      pointer-events: none;
+    }
+    .clean .pane-label { display: none; }
+
+    .pane iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #000;
+    }
+
+    body.clean .composer-chrome { display: none; }
+    body.clean .stage { flex: 1; min-height: 100vh; height: 100vh; }
+    body.clean { min-height: 100vh; }
+
+    .empty-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 2rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="composer-chrome">
+    <h1>Composer</h1>
+    <p class="lede">
+      Load a <strong>visual</strong> (e.g. a sketch on your site) and a <strong>Soundscapes audio</strong> page in one view.
+      Use <code>?clean=1</code> for OBS Browser Source — chrome hidden, full viewport to the pair.
+      Some sites block embedding; if a frame stays blank, open that URL in a normal tab or host copies you control.
+    </p>
+
+    <form class="grid" id="form" novalidate>
+      <label class="field">
+        Visual URL
+        <input type="url" id="visualIn" name="visual" placeholder="https://yoursite.com/sketches/walking/index.html" autocomplete="off" />
+      </label>
+      <label class="field">
+        Audio URL
+        <input type="url" id="audioIn" name="audio" placeholder="https://yoursite.com/audio/standalone.html" autocomplete="off" />
+      </label>
+      <div class="opts">
+        <label>
+          Layout
+          <select id="layoutSel" name="layout">
+            <option value="stack">Stack (visual top, audio bottom)</option>
+            <option value="split">Split (visual left, audio right)</option>
+          </select>
+        </label>
+        <label>
+          <input type="checkbox" id="cleanChk" />
+          Clean mode (OBS)
+        </label>
+        <label>
+          Audio panel height
+          <select id="audioH" name="audioHeight">
+            <option value="22">22% viewport</option>
+            <option value="28" selected>28% viewport</option>
+            <option value="35">35% viewport</option>
+            <option value="40">40% viewport</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <button type="submit" class="primary">Load pair</button>
+        <button type="button" id="btnCopy" title="Copy URL with current fields">Copy composer URL</button>
+        <a class="link-btn" href="./index.html">Soundscapes index</a>
+      </div>
+    </form>
+    <p class="msg" id="msg" role="status"></p>
+    <p class="hint">
+      <strong>OBS:</strong> Add Browser Source → paste your composer URL (with <code>clean=1</code>).
+      Start audio inside the bottom/right panel if your tool requires a click. For Mac desktop capture without virtual cables,
+      rely on OBS capturing the browser source’s audio when the browser source audio option is available, or record from this page’s built-in capture in each tool if you prefer.
+    </p>
+  </div>
+
+  <div class="stage layout-stack" id="stage" hidden>
+    <div class="pane visual-pane">
+      <span class="pane-label">Visual</span>
+      <iframe id="frameVisual" title="Visual sketch" allow="autoplay; fullscreen; microphone; camera"></iframe>
+    </div>
+    <div class="pane audio-pane" id="audioPane">
+      <span class="pane-label">Audio</span>
+      <iframe id="frameAudio" title="Audio tool" allow="autoplay; microphone"></iframe>
+    </div>
+  </div>
+
+  <div class="empty-stage" id="emptyHint">
+    Enter URLs above and choose <strong>Load pair</strong>, or open this page with
+    <code>?visual=…&amp;audio=…</code>
+  </div>
+
+  <script>
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  const form = document.getElementById("form");
+  const visualIn = document.getElementById("visualIn");
+  const audioIn = document.getElementById("audioIn");
+  const layoutSel = document.getElementById("layoutSel");
+  const cleanChk = document.getElementById("cleanChk");
+  const audioH = document.getElementById("audioH");
+  const stage = document.getElementById("stage");
+  const emptyHint = document.getElementById("emptyHint");
+  const frameVisual = document.getElementById("frameVisual");
+  const frameAudio = document.getElementById("frameAudio");
+  const audioPane = document.getElementById("audioPane");
+  const msg = document.getElementById("msg");
+  const btnCopy = document.getElementById("btnCopy");
+
+  const LS_V = "composerVisualUrl";
+  const LS_A = "composerAudioUrl";
+
+  function safeHttpUrl(s) {
+    if (!s || typeof s !== "string") return null;
+    const t = s.trim();
+    if (!t) return null;
+    try {
+      const u = new URL(t);
+      if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+      return u.href;
+    } catch {
+      return null;
+    }
+  }
+
+  function applyLayout(layout) {
+    stage.classList.remove("layout-stack", "layout-split");
+    if (layout === "split") {
+      stage.classList.add("layout-split");
+    } else {
+      stage.classList.add("layout-stack");
+    }
+  }
+
+  function applyAudioHeight(pct) {
+    const n = Math.max(18, Math.min(50, Number(pct) || 28));
+    audioPane.style.setProperty("--audio-h", n + "vh");
+  }
+
+  function readFormFromStorage() {
+    try {
+      const v = localStorage.getItem(LS_V);
+      const a = localStorage.getItem(LS_A);
+      if (v) visualIn.value = v;
+      if (a) audioIn.value = a;
+    } catch (_) {}
+  }
+
+  function saveForm() {
+    try {
+      if (visualIn.value.trim()) localStorage.setItem(LS_V, visualIn.value.trim());
+      if (audioIn.value.trim()) localStorage.setItem(LS_A, audioIn.value.trim());
+    } catch (_) {}
+  }
+
+  function showStage(show) {
+    stage.hidden = !show;
+    emptyHint.hidden = show;
+  }
+
+  function loadFromParams() {
+    const v = safeHttpUrl(params.get("visual") || "");
+    const a = safeHttpUrl(params.get("audio") || "");
+    const layout = params.get("layout") === "split" ? "split" : "stack";
+    const clean = params.get("clean") === "1" || params.get("clean") === "true";
+    const ah = params.get("audioHeight") || "28";
+
+    if (params.has("visual")) visualIn.value = v || "";
+    if (params.has("audio")) audioIn.value = a || "";
+    layoutSel.value = layout;
+    cleanChk.checked = clean;
+    audioH.value = ["22", "28", "35", "40"].includes(ah) ? ah : "28";
+
+    if (clean) document.body.classList.add("clean");
+    else document.body.classList.remove("clean");
+
+    applyLayout(layoutSel.value);
+    applyAudioHeight(audioH.value);
+
+    if (!v && !a) {
+      readFormFromStorage();
+      showStage(false);
+      return;
+    }
+
+    if (!v) {
+      msg.textContent = "Add a valid https visual URL.";
+      showStage(false);
+      return;
+    }
+
+    frameVisual.src = v;
+    frameAudio.src = a || "about:blank";
+
+    showStage(true);
+    msg.textContent = "";
+    saveForm();
+
+    if (!a) {
+      msg.textContent = "Visual only — add an audio URL for a full pair.";
+      msg.classList.add("ok");
+    } else {
+      msg.classList.remove("ok");
+    }
+  }
+
+  function buildShareUrl() {
+    const q = new URLSearchParams();
+    const v = safeHttpUrl(visualIn.value);
+    const a = safeHttpUrl(audioIn.value);
+    if (v) q.set("visual", v);
+    if (a) q.set("audio", a);
+    q.set("layout", layoutSel.value);
+    if (cleanChk.checked) q.set("clean", "1");
+    q.set("audioHeight", audioH.value);
+    const base = window.location.pathname + "?" + q.toString();
+    return new URL(base, window.location.origin).href;
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    msg.textContent = "";
+    msg.classList.remove("ok");
+
+    const v = safeHttpUrl(visualIn.value);
+    const a = safeHttpUrl(audioIn.value);
+
+    if (!v) {
+      msg.textContent = "Visual URL must be a valid http(s) address.";
+      showStage(false);
+      return;
+    }
+
+    saveForm();
+    const next = new URL(buildShareUrl());
+    window.history.replaceState({}, "", next.pathname + next.search);
+    frameVisual.src = v;
+    frameAudio.src = a || "about:blank";
+    applyLayout(layoutSel.value);
+    applyAudioHeight(audioH.value);
+    if (cleanChk.checked) document.body.classList.add("clean");
+    else document.body.classList.remove("clean");
+    showStage(true);
+    if (!a) {
+      msg.textContent = "Visual loaded. Add an audio URL for sound.";
+      msg.classList.add("ok");
+    }
+  });
+
+  layoutSel.addEventListener("change", () => applyLayout(layoutSel.value));
+  audioH.addEventListener("change", () => applyAudioHeight(audioH.value));
+  cleanChk.addEventListener("change", () => {
+    document.body.classList.toggle("clean", cleanChk.checked);
+  });
+
+  btnCopy.addEventListener("click", async () => {
+    const url = buildShareUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      msg.textContent = "Composer URL copied to clipboard.";
+      msg.classList.add("ok");
+    } catch {
+      msg.textContent = url;
+      msg.classList.add("ok");
+    }
+  });
+
+  loadFromParams();
+})();
+  </script>
+</body>
+</html>

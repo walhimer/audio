@@ -5,11 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sync (Sequencer) — Tone.js</title>
   <!--
-    Samples: this page does not ship proprietary sample packs. For piano it uses the public
-    Salamander Grand Piano set that Tone.js
-    documents: baseUrl https://tonejs.github.io/audio/salamander/ (MP3s per note).
-    Requires network the first time you pick “Piano (samples)”. Synth modes use no samples.
-    Tone.js library: local ./tone.js (copy from node_modules/tone/build/Tone.js after npm install).
+    Samples: Salamander via tonejs.github.io MP3s or local salamander-local/*.wav (v10).
+    Tone.js: local ./tone.js
   -->
   <style>
     :root {
@@ -21,8 +18,6 @@
       --accent: #5ce1c8;
       --accent-dim: #3a9d8a;
       --cell: #1e2128;
-      --cell-on: #2d4a42;
-      --cell-on-border: var(--accent-dim);
       font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
     }
     * { box-sizing: border-box; }
@@ -34,7 +29,7 @@
       padding: 1.25rem clamp(0.75rem, 3vw, 2rem) 2rem;
     }
     h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 0.35rem; }
-    .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.5rem; max-width: 46rem; line-height: 1.45; }
+    .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.5rem; max-width: 48rem; line-height: 1.45; }
     .status { font-size: 0.8rem; color: var(--accent-dim); margin-bottom: 1rem; min-height: 1.2em; }
     .toolbar {
       display: flex;
@@ -67,7 +62,7 @@
       min-width: 5rem;
     }
     input[type="range"] { width: 120px; accent-color: var(--accent); }
-    .btn-row { display: flex; gap: 0.5rem; align-items: center; }
+    .btn-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
     button {
       cursor: pointer;
       border: 1px solid var(--border);
@@ -86,71 +81,87 @@
     }
     button.primary:hover { filter: brightness(1.08); }
     button:disabled { opacity: 0.45; cursor: not-allowed; }
-    .seq-wrap {
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
+    .lanes-wrap {
       border: 1px solid var(--border);
       border-radius: 10px;
       background: var(--panel);
+      padding: 1rem 1rem 0.5rem;
+      margin-bottom: 1rem;
     }
-    .seq { display: grid; gap: 3px; padding: 10px; min-width: min-content; }
-    .cell {
-      width: 28px;
-      height: 28px;
-      border-radius: 5px;
-      border: 1px solid var(--border);
-      background: var(--cell);
-      cursor: pointer;
-      transition: background 0.08s, border-color 0.08s;
-    }
-    .cell:hover { border-color: var(--muted); }
-    .cell.on {
-      background: var(--cell-on);
-      border-color: var(--cell-on-border);
-      box-shadow: inset 0 0 12px rgba(92, 225, 200, 0.12);
-    }
-    .cell.playhead { outline: 2px solid var(--accent); outline-offset: 1px; }
-    .row-label {
-      font-size: 0.7rem;
-      color: var(--muted);
+    .lanes-head {
       display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding-right: 6px;
-      min-width: 2.25rem;
-      font-variant-numeric: tabular-nums;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
     }
-    .step-num { font-size: 0.65rem; color: var(--muted); text-align: center; padding-top: 2px; }
+    .lanes-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0; }
+    .lanes-hint { font-size: 0.8rem; color: var(--muted); margin: 0; max-width: 36rem; line-height: 1.4; }
+    .voice-lane {
+      display: grid;
+      grid-template-columns: auto repeat(auto-fit, minmax(9rem, 1fr));
+      gap: 0.65rem 1rem;
+      align-items: end;
+      padding: 0.85rem 0;
+      border-top: 1px solid var(--border);
+    }
+    .voice-lane:first-of-type { border-top: none; padding-top: 0; }
+    .lane-num {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-dim);
+      width: 1.75rem;
+      text-align: center;
+      padding-bottom: 0.35rem;
+    }
+    label.lane-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+    label.lane-field.lane-density label span { font-variant-numeric: tabular-nums; }
+    .lane-field input[type="range"] { width: 100%; min-width: 0; max-width: 160px; }
+    .lane-field select { min-width: 0; width: 100%; max-width: 200px; font-size: 0.88rem; }
+    .lane-field.synth-only { opacity: 1; }
+    .lane-field.synth-only.hidden { display: none; }
+    .step-tick {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      padding: 0.35rem 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
     footer { margin-top: 1.25rem; font-size: 0.75rem; color: var(--muted); }
-    @media (max-width: 540px) { .cell { width: 22px; height: 22px; } }
+    @media (max-width: 720px) {
+      .voice-lane { grid-template-columns: 1fr; }
+      .lane-num { padding-bottom: 0; }
+    }
   </style>
   <script src="./tone.js"></script>
 </head>
 <body>
   <h1>Sync (Sequencer)</h1>
   <p class="sub">
-    Sequencer using <strong>Tone.js</strong>. Your <strong>Salamander Grand Piano V3</strong> pack
-    (<code>48khz24bit</code> WAVs, CC-by) uses many velocity layers per note (<code>C4v1.wav</code>…<code>v16</code>).
-    This app copies <strong>one layer (v10)</strong> per note into <code>salamander-local/</code> and maps the same
-    minor-third grid as the Tone.js MP3 demo. “Piano (web)” uses small MP3s from
-    <code>tonejs.github.io</code> instead (no large local files).
+    <strong>Flow lanes</strong> — up to four voices run in parallel. Each step, every lane may fire based on its
+    <em>density</em> and <em>pitch</em> rule (fixed scale row or random). Set how each voice behaves, adjust the mix,
+    press Play, and let the loop run. Uses <strong>Tone.js</strong>; local Salamander WAVs go in
+    <code>salamander-local/</code> (v10 layer), or use web MP3s from <code>tonejs.github.io</code>.
   </p>
   <p class="status" id="status" aria-live="polite"></p>
 
   <div class="toolbar">
     <div class="btn-row">
       <button type="button" class="primary" id="btnPlay">Play</button>
-      <button type="button" id="btnClear">Clear grid</button>
+      <button type="button" id="btnRandomize" title="Randomize lane densities and pitch modes">Randomize lanes</button>
+      <span class="step-tick" id="stepTick" aria-hidden="true">Step —</span>
     </div>
-    <label class="field">
-      Voice
-      <select id="voice">
-        <option value="polySynth" selected>Poly synth</option>
-        <option value="monoSynth">Mono synth (lead)</option>
-        <option value="samplerLocal">Piano (local WAV)</option>
-        <option value="sampler">Piano (web MP3)</option>
-      </select>
-    </label>
     <label class="field">
       Tempo (BPM)
       <input type="number" id="bpm" min="40" max="240" value="96" />
@@ -170,21 +181,12 @@
       </select>
     </label>
     <label class="field">
-      Steps
+      Steps (loop)
       <input type="number" id="steps" min="8" max="32" value="16" step="4" />
     </label>
     <label class="field">
-      <span class="hint">Gain</span>
+      <span class="hint">Master gain</span>
       <input type="range" id="gain" min="0" max="100" value="35" />
-    </label>
-    <label class="field">
-      <span class="hint">Wave (synth)</span>
-      <select id="wave">
-        <option value="triangle" selected>Triangle</option>
-        <option value="sine">Sine</option>
-        <option value="square">Square</option>
-        <option value="sawtooth">Sawtooth</option>
-      </select>
     </label>
     <label class="field">
       <span class="hint">Attack</span>
@@ -224,8 +226,14 @@
     </label>
   </div>
 
-  <div class="seq-wrap">
-    <div class="seq" id="grid" aria-label="Step sequencer grid"></div>
+  <div class="lanes-wrap">
+    <div class="lanes-head">
+      <h2 class="lanes-title">Voices</h2>
+      <p class="lanes-hint">
+        Density = chance this lane plays each step. Pitch = which row of the scale (low → high), or random within the scale.
+      </p>
+    </div>
+    <div id="lanes"></div>
   </div>
 
   <footer>
@@ -243,71 +251,37 @@
     chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
   };
 
-  /** Salamander mapping — files on tonejs.github.io (see Tone.js README). */
   const SALAMANDER_URLS = {
-    A0: "A0.mp3",
-    C1: "C1.mp3",
-    "D#1": "Ds1.mp3",
-    "F#1": "Fs1.mp3",
-    A1: "A1.mp3",
-    C2: "C2.mp3",
-    "D#2": "Ds2.mp3",
-    "F#2": "Fs2.mp3",
-    A2: "A2.mp3",
-    C3: "C3.mp3",
-    "D#3": "Ds3.mp3",
-    "F#3": "Fs3.mp3",
-    A3: "A3.mp3",
-    C4: "C4.mp3",
-    "D#4": "Ds4.mp3",
-    "F#4": "Fs4.mp3",
-    A4: "A4.mp3",
-    C5: "C5.mp3",
-    "D#5": "Ds5.mp3",
-    "F#5": "Fs5.mp3",
-    A5: "A5.mp3",
-    C6: "C6.mp3",
-    "D#6": "Ds6.mp3",
-    "F#6": "Fs6.mp3",
-    A6: "A6.mp3",
-    C7: "C7.mp3",
-    "D#7": "Ds7.mp3",
-    "F#7": "Fs7.mp3",
-    C8: "C8.mp3",
+    A0: "A0.mp3", C1: "C1.mp3", "D#1": "Ds1.mp3", "F#1": "Fs1.mp3", A1: "A1.mp3",
+    C2: "C2.mp3", "D#2": "Ds2.mp3", "F#2": "Fs2.mp3", A2: "A2.mp3",
+    C3: "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3", A3: "A3.mp3",
+    C4: "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", A4: "A4.mp3",
+    C5: "C5.mp3", "D#5": "Ds5.mp3", "F#5": "Fs5.mp3", A5: "A5.mp3",
+    C6: "C6.mp3", "D#6": "Ds6.mp3", "F#6": "Fs6.mp3", A6: "A6.mp3",
+    C7: "C7.mp3", "D#7": "Ds7.mp3", "F#7": "Fs7.mp3", C8: "C8.mp3",
   };
 
-  /** Same note grid; your 48kHz WAVs use velocity suffix — we ship v10 (medium) per note. */
   const SALAMANDER_LOCAL_URLS = {
-    A0: "A0v10.wav",
-    C1: "C1v10.wav",
-    "D#1": "D#1v10.wav",
-    "F#1": "F#1v10.wav",
-    A1: "A1v10.wav",
-    C2: "C2v10.wav",
-    "D#2": "D#2v10.wav",
-    "F#2": "F#2v10.wav",
-    A2: "A2v10.wav",
-    C3: "C3v10.wav",
-    "D#3": "D#3v10.wav",
-    "F#3": "F#3v10.wav",
-    A3: "A3v10.wav",
-    C4: "C4v10.wav",
-    "D#4": "D#4v10.wav",
-    "F#4": "F#4v10.wav",
-    A4: "A4v10.wav",
-    C5: "C5v10.wav",
-    "D#5": "D#5v10.wav",
-    "F#5": "F#5v10.wav",
-    A5: "A5v10.wav",
-    C6: "C6v10.wav",
-    "D#6": "D#6v10.wav",
-    "F#6": "F#6v10.wav",
-    A6: "A6v10.wav",
-    C7: "C7v10.wav",
-    "D#7": "D#7v10.wav",
-    "F#7": "F#7v10.wav",
-    C8: "C8v10.wav",
+    A0: "A0v10.wav", C1: "C1v10.wav", "D#1": "D#1v10.wav", "F#1": "F#1v10.wav", A1: "A1v10.wav",
+    C2: "C2v10.wav", "D#2": "D#2v10.wav", "F#2": "F#2v10.wav", A2: "A2v10.wav",
+    C3: "C3v10.wav", "D#3": "D#3v10.wav", "F#3": "F#3v10.wav", A3: "A3v10.wav",
+    C4: "C4v10.wav", "D#4": "D#4v10.wav", "F#4": "F#4v10.wav", A4: "A4v10.wav",
+    C5: "C5v10.wav", "D#5": "D#5v10.wav", "F#5": "F#5v10.wav", A5: "A5v10.wav",
+    C6: "C6v10.wav", "D#6": "D#6v10.wav", "F#6": "F#6v10.wav", A6: "A6v10.wav",
+    C7: "C7v10.wav", "D#7": "D#7v10.wav", "F#7": "F#7v10.wav", C8: "C8v10.wav",
   };
+
+  const NUM_LANES = 4;
+  const rows = 8;
+
+  const VOICE_OPTS = [
+    { value: "polySynth", label: "Poly synth" },
+    { value: "monoSynth", label: "Mono synth (lead)" },
+    { value: "samplerLocal", label: "Piano (local WAV)" },
+    { value: "sampler", label: "Piano (web MP3)" },
+  ];
+
+  const WAVE_OPTS = ["triangle", "sine", "square", "sawtooth"];
 
   function isSamplerMode(mode) {
     return mode === "sampler" || mode === "samplerLocal";
@@ -322,14 +296,12 @@
     rootSel.appendChild(o);
   });
 
-  const gridEl = document.getElementById("grid");
+  const lanesEl = document.getElementById("lanes");
   const statusEl = document.getElementById("status");
-  const voiceEl = document.getElementById("voice");
   const bpmEl = document.getElementById("bpm");
   const stepsEl = document.getElementById("steps");
   const scaleEl = document.getElementById("scale");
   const gainEl = document.getElementById("gain");
-  const waveEl = document.getElementById("wave");
   const attackEl = document.getElementById("attack");
   const decayEl = document.getElementById("decay");
   const sustainEl = document.getElementById("sustain");
@@ -340,22 +312,95 @@
   const dlyFbEl = document.getElementById("dlyFb");
   const dlyMixEl = document.getElementById("dlyMix");
   const btnPlay = document.getElementById("btnPlay");
+  const stepTickEl = document.getElementById("stepTick");
 
-  let rows = 8;
-  let cols = 16;
-  /** @type {boolean[][]} */
-  let state = [];
-  let playhead = -1;
-  let playing = false;
-  let schedId = null;
-  let stepIndex = 0;
+  /** @type {Tone.PolySynth | Tone.MonoSynth | Tone.Sampler | null} */
+  let samplerWeb = null;
+  let samplerLocal = null;
+  /** @type {(Tone.PolySynth | Tone.MonoSynth | null)[]} */
+  const laneSynths = [null, null, null, null];
 
   let feedbackDelay = null;
   let lowPass = null;
-  /** @type {Tone.PolySynth | Tone.MonoSynth | Tone.Sampler | null} */
-  let instrument = null;
-  let instrumentMode = "polySynth";
-  let samplerReady = false;
+  let playing = false;
+  let schedId = null;
+  let stepIndex = 0;
+  let cols = 16;
+  let pianosLoading = false;
+  let samplerWebReady = false;
+  let samplerLocalReady = false;
+
+  const defaultLanes = [
+    { voice: "polySynth", density: 38, row: "random", wave: "triangle", laneGain: 72 },
+    { voice: "polySynth", density: 22, row: "3", wave: "sine", laneGain: 55 },
+    { voice: "monoSynth", density: 28, row: "random", wave: "sawtooth", laneGain: 60 },
+    { voice: "sampler", density: 18, row: "random", wave: "triangle", laneGain: 78 },
+  ];
+
+  function buildLaneDOM() {
+    lanesEl.innerHTML = "";
+    for (let i = 0; i < NUM_LANES; i++) {
+      const d = defaultLanes[i];
+      const wrap = document.createElement("div");
+      wrap.className = "voice-lane";
+      wrap.dataset.lane = String(i);
+      wrap.innerHTML = `
+        <div class="lane-num">${i + 1}</div>
+        <label class="lane-field">Voice
+          <select class="lane-voice" data-lane="${i}">${VOICE_OPTS.map(
+        (o) => `<option value="${o.value}" ${o.value === d.voice ? "selected" : ""}>${o.label}</option>`
+      ).join("")}</select>
+        </label>
+        <label class="lane-field lane-density">Density <span class="dens-val">${d.density}</span>%
+          <input type="range" class="lane-density-r" min="0" max="100" value="${d.density}" data-lane="${i}" />
+        </label>
+        <label class="lane-field">Pitch
+          <select class="lane-row" data-lane="${i}"></select>
+        </label>
+        <label class="lane-field synth-only ${isSamplerMode(d.voice) ? "hidden" : ""}">Wave
+          <select class="lane-wave" data-lane="${i}">${WAVE_OPTS.map(
+        (w) => `<option value="${w}" ${w === d.wave ? "selected" : ""}>${w}</option>`
+      ).join("")}</select>
+        </label>
+        <label class="lane-field">Level
+          <input type="range" class="lane-lgain" min="0" max="100" value="${d.laneGain}" data-lane="${i}" />
+        </label>
+      `;
+      lanesEl.appendChild(wrap);
+      const rowSel = wrap.querySelector(".lane-row");
+      const optRandom = document.createElement("option");
+      optRandom.value = "random";
+      optRandom.textContent = "Random (scale)";
+      rowSel.appendChild(optRandom);
+      for (let r = 0; r < rows; r++) {
+        const o = document.createElement("option");
+        o.value = String(r);
+        o.textContent = `Row ${r + 1} (low→high)`;
+        if (d.row === String(r)) o.selected = true;
+        rowSel.appendChild(o);
+      }
+      if (d.row === "random") optRandom.selected = true;
+
+      const densR = wrap.querySelector(".lane-density-r");
+      const densVal = wrap.querySelector(".dens-val");
+      densR.addEventListener("input", () => {
+        densVal.textContent = densR.value;
+      });
+    }
+
+    lanesEl.querySelectorAll(".lane-voice").forEach((sel) => {
+      sel.addEventListener("change", (e) => {
+        const lane = Number(e.target.getAttribute("data-lane"));
+        const mode = e.target.value;
+        const laneEl = e.target.closest(".voice-lane");
+        const waveWrap = laneEl.querySelector(".synth-only");
+        waveWrap.classList.toggle("hidden", isSamplerMode(mode));
+        disposeLaneSynth(lane);
+      });
+    });
+  }
+
+  buildLaneDOM();
 
   function expScale01(u, min, max) {
     return min * Math.pow(max / min, u / 100);
@@ -380,108 +425,175 @@
     lowPass.Q.value = 0.4 + (Number(filtQEl.value) / 100) * 19;
   }
 
-  function applySynthEnvelope() {
-    if (!instrument || isSamplerMode(instrumentMode)) return;
-    const env = readEnvelope();
-    if (instrumentMode === "polySynth") {
-      instrument.set({ envelope: env, oscillator: { type: waveEl.value } });
-    } else {
-      instrument.set({ envelope: env, oscillator: { type: waveEl.value } });
-    }
-  }
-
-  function disposeInstrument() {
-    if (instrument) {
-      instrument.dispose();
-      instrument = null;
-    }
-    samplerReady = false;
-  }
-
   function buildEffectsIfNeeded() {
     if (feedbackDelay) return;
     feedbackDelay = new Tone.FeedbackDelay({ delayTime: 0.01, feedback: 0, wet: 0 });
     lowPass = new Tone.Filter({ type: "lowpass", frequency: 2000, Q: 1 });
     syncEffectParams();
+    lowPass.connect(feedbackDelay);
+    feedbackDelay.toDestination();
   }
 
-  function connectSourceToFx(source) {
-    source.chain(lowPass, feedbackDelay, Tone.Destination);
-  }
-
-  async function ensureInstrument(mode) {
+  function connectToBus(node) {
     buildEffectsIfNeeded();
-    if (instrument && instrumentMode === mode) {
-      applySynthEnvelope();
+    node.connect(lowPass);
+  }
+
+  function disposeLaneSynth(lane) {
+    const s = laneSynths[lane];
+    if (s) {
+      s.dispose();
+      laneSynths[lane] = null;
+    }
+  }
+
+  function disposeSamplers() {
+    if (samplerWeb) {
+      samplerWeb.dispose();
+      samplerWeb = null;
+    }
+    if (samplerLocal) {
+      samplerLocal.dispose();
+      samplerLocal = null;
+    }
+    samplerWebReady = false;
+    samplerLocalReady = false;
+  }
+
+  function applySynthParams(inst) {
+    if (!inst || inst instanceof Tone.Sampler) return;
+    const env = readEnvelope();
+    inst.set({ envelope: env });
+  }
+
+  function getLaneVoiceEl(lane) {
+    return document.querySelector(`.lane-voice[data-lane="${lane}"]`);
+  }
+
+  function getLaneWave(lane) {
+    const w = document.querySelector(`.lane-wave[data-lane="${lane}"]`);
+    return w ? w.value : "triangle";
+  }
+
+  async function ensureSamplerWeb() {
+    buildEffectsIfNeeded();
+    if (samplerWeb && samplerWebReady) return;
+    pianosLoading = true;
+    btnPlay.disabled = true;
+    statusEl.textContent = "Loading Salamander MP3s (web)…";
+    if (samplerWeb) {
+      samplerWeb.dispose();
+      samplerWeb = null;
+    }
+    const vol = Tone.gainToDb(Number(gainEl.value) / 100 * 0.85);
+    samplerWeb = new Tone.Sampler({
+      urls: SALAMANDER_URLS,
+      baseUrl: "https://tonejs.github.io/audio/salamander/",
+      volume: vol,
+    });
+    connectToBus(samplerWeb);
+    try {
+      await Tone.loaded();
+      samplerWebReady = true;
+      statusEl.textContent = "Web piano ready.";
+    } catch (e) {
+      samplerWebReady = false;
+      statusEl.textContent = "Could not load web piano (network?).";
+      throw e;
+    } finally {
+      pianosLoading = false;
+      btnPlay.disabled = false;
+    }
+  }
+
+  async function ensureSamplerLocal() {
+    buildEffectsIfNeeded();
+    if (samplerLocal && samplerLocalReady) return;
+    pianosLoading = true;
+    btnPlay.disabled = true;
+    statusEl.textContent = "Loading local Salamander WAVs…";
+    if (samplerLocal) {
+      samplerLocal.dispose();
+      samplerLocal = null;
+    }
+    const baseUrl = new URL("salamander-local/", window.location.href).href;
+    const vol = Tone.gainToDb(Number(gainEl.value) / 100 * 0.85);
+    samplerLocal = new Tone.Sampler({
+      urls: SALAMANDER_LOCAL_URLS,
+      baseUrl,
+      volume: vol,
+    });
+    connectToBus(samplerLocal);
+    try {
+      await Tone.loaded();
+      samplerLocalReady = true;
+      statusEl.textContent = "Local piano WAVs loaded.";
+    } catch (e) {
+      samplerLocalReady = false;
+      statusEl.textContent = "Missing salamander-local/*.wav — check folder next to this file.";
+      throw e;
+    } finally {
+      pianosLoading = false;
+      btnPlay.disabled = false;
+    }
+  }
+
+  function ensureLaneSynth(lane) {
+    const mode = getLaneVoiceEl(lane).value;
+    if (isSamplerMode(mode)) return;
+
+    const wave = getLaneWave(lane);
+    const env = readEnvelope();
+    const vol = Tone.gainToDb(Number(gainEl.value) / 100 * 0.85);
+
+    const existing = laneSynths[lane];
+    if (existing && existing instanceof Tone.PolySynth && mode === "polySynth") {
+      existing.set({ oscillator: { type: wave }, volume: vol, envelope: env });
       return;
     }
-    disposeInstrument();
-    instrumentMode = mode;
-    const env = readEnvelope();
-    const vol = Tone.gainToDb(Number(gainEl.value) / 100 * 0.9);
+    if (existing && existing instanceof Tone.MonoSynth && mode === "monoSynth") {
+      existing.set({ oscillator: { type: wave }, volume: vol, envelope: env });
+      return;
+    }
+
+    disposeLaneSynth(lane);
+    buildEffectsIfNeeded();
 
     if (mode === "polySynth") {
-      instrument = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: waveEl.value },
+      laneSynths[lane] = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: wave },
         envelope: env,
         volume: vol,
       });
-      connectSourceToFx(instrument);
-      statusEl.textContent = "Poly synth ready.";
-      samplerReady = true;
-    } else if (mode === "monoSynth") {
-      instrument = new Tone.MonoSynth({
-        oscillator: { type: waveEl.value },
-        envelope: env,
-        volume: vol,
-      });
-      connectSourceToFx(instrument);
-      statusEl.textContent = "Mono synth ready.";
-      samplerReady = true;
-    } else if (mode === "samplerLocal") {
-      statusEl.textContent = "Loading local Salamander WAVs…";
-      samplerReady = false;
-      btnPlay.disabled = true;
-      const baseUrl = new URL("salamander-local/", window.location.href).href;
-      instrument = new Tone.Sampler({
-        urls: SALAMANDER_LOCAL_URLS,
-        baseUrl,
-        volume: vol,
-      });
-      connectSourceToFx(instrument);
-      try {
-        await Tone.loaded();
-        samplerReady = true;
-        statusEl.textContent = "Local piano WAVs loaded (v10 layer).";
-        btnPlay.disabled = false;
-      } catch (e) {
-        statusEl.textContent =
-          "Could not load salamander-local/*.wav — open index.html via the same folder, or check files exist.";
-        samplerReady = false;
-        btnPlay.disabled = true;
-      }
+      connectToBus(laneSynths[lane]);
     } else {
-      statusEl.textContent = "Loading Salamander MP3s (web)…";
-      samplerReady = false;
-      btnPlay.disabled = true;
-      instrument = new Tone.Sampler({
-        urls: SALAMANDER_URLS,
-        baseUrl: "https://tonejs.github.io/audio/salamander/",
+      laneSynths[lane] = new Tone.MonoSynth({
+        oscillator: { type: wave },
+        envelope: env,
         volume: vol,
       });
-      connectSourceToFx(instrument);
-      try {
-        await Tone.loaded();
-        samplerReady = true;
-        statusEl.textContent = "Web piano samples loaded (Salamander MP3).";
-        btnPlay.disabled = false;
-      } catch (e) {
-        statusEl.textContent =
-          "Could not load piano MP3s (network?). Try “Piano (local WAV)” or a synth voice.";
-        samplerReady = false;
-        btnPlay.disabled = true;
-      }
+      connectToBus(laneSynths[lane]);
     }
+  }
+
+  async function prepareAllInstruments() {
+    const needLocal = [];
+    const needWeb = [];
+    for (let i = 0; i < NUM_LANES; i++) {
+      const m = getLaneVoiceEl(i).value;
+      if (m === "samplerLocal") needLocal.push(i);
+      else if (m === "sampler") needWeb.push(i);
+    }
+    if (needLocal.length) await ensureSamplerLocal();
+    if (needWeb.length) await ensureSamplerWeb();
+
+    for (let i = 0; i < NUM_LANES; i++) {
+      const m = getLaneVoiceEl(i).value;
+      if (!isSamplerMode(m)) ensureLaneSynth(i);
+    }
+
+    if (samplerWeb) samplerWeb.volume.value = Tone.gainToDb(Number(gainEl.value) / 100 * 0.85);
+    if (samplerLocal) samplerLocal.volume.value = Tone.gainToDb(Number(gainEl.value) / 100 * 0.85);
   }
 
   function midiToNoteName(midi) {
@@ -506,103 +618,73 @@
     return "16n";
   }
 
-  function playColumn(col, time) {
-    const midiRow = buildScaleMidi();
-    const notes = [];
-    for (let r = 0; r < rows; r++) {
-      if (state[r] && state[r][col]) notes.push(midiRow[r]);
-    }
-    if (notes.length === 0) return;
+  function readLaneConfig(lane) {
+    const box = document.querySelector(`.voice-lane[data-lane="${lane}"]`);
+    const dens = Number(box.querySelector(".lane-density-r").value);
+    const rowSel = box.querySelector(".lane-row").value;
+    const lg = Number(box.querySelector(".lane-lgain").value);
+    return {
+      voice: box.querySelector(".lane-voice").value,
+      density: dens,
+      row: rowSel,
+      laneGain: lg,
+    };
+  }
 
-    const names = notes.map(midiToNoteName);
+  function playLaneStep(lane, time) {
+    const cfg = readLaneConfig(lane);
+    if (Math.random() * 100 >= cfg.density) return;
+
+    const midiRow = buildScaleMidi();
+    let r;
+    if (cfg.row === "random") r = Math.floor(Math.random() * rows);
+    else r = Math.min(rows - 1, Math.max(0, Number(cfg.row)));
+
+    const midi = midiRow[r];
+    const name = midiToNoteName(midi);
     const dur = stepDurStr();
+    const masterLin = Number(gainEl.value) / 100;
+    const laneLin = cfg.laneGain / 100;
+    const vel = Math.min(1, masterLin * laneLin * 1.15);
 
-    if (instrumentMode === "monoSynth") {
-      const maxMidi = Math.max(...notes);
-      instrument.triggerAttackRelease(midiToNoteName(maxMidi), dur, time);
+    const mode = cfg.voice;
+
+    if (mode === "sampler") {
+      if (!samplerWeb || !samplerWebReady) return;
+      samplerWeb.triggerAttackRelease(name, dur, time, vel);
+    } else if (mode === "samplerLocal") {
+      if (!samplerLocal || !samplerLocalReady) return;
+      samplerLocal.triggerAttackRelease(name, dur, time, vel);
     } else {
-      instrument.triggerAttackRelease(names, dur, time);
-    }
-  }
-
-  function setPlayhead(col) {
-    playhead = col;
-    gridEl.querySelectorAll(".playhead").forEach((el) => el.classList.remove("playhead"));
-    for (let r = 0; r < rows; r++) {
-      const idx = 2 + cols + r * (1 + cols) + col;
-      const cell = gridEl.children[idx];
-      if (cell && cell.classList.contains("cell")) cell.classList.add("playhead");
-    }
-  }
-
-  function clearPlayhead() {
-    playhead = -1;
-    gridEl.querySelectorAll(".playhead").forEach((el) => el.classList.remove("playhead"));
-  }
-
-  function resizeState() {
-    const nextRows = rows;
-    const nextCols = cols;
-    const next = [];
-    for (let r = 0; r < nextRows; r++) {
-      next[r] = [];
-      for (let c = 0; c < nextCols; c++) {
-        next[r][c] = state[r] && state[r][c] ? true : false;
+      const syn = laneSynths[lane];
+      if (!syn) return;
+      if (mode === "monoSynth") {
+        syn.triggerAttackRelease(name, dur, time, vel);
+      } else {
+        syn.triggerAttackRelease(name, dur, time, vel);
       }
     }
-    state = next;
   }
 
-  function renderGrid() {
-    gridEl.innerHTML = "";
-    gridEl.style.gridTemplateColumns = `auto repeat(${cols}, 28px)`;
-    gridEl.appendChild(document.createElement("div"));
-    for (let c = 0; c < cols; c++) {
-      const hn = document.createElement("div");
-      hn.className = "step-num";
-      hn.textContent = c + 1;
-      gridEl.appendChild(hn);
+  function playStep(time) {
+    syncEffectParams();
+    for (let lane = 0; lane < NUM_LANES; lane++) {
+      playLaneStep(lane, time);
     }
-    const midiRow = buildScaleMidi();
-    for (let r = 0; r < rows; r++) {
-      const lab = document.createElement("div");
-      lab.className = "row-label";
-      const m = midiRow[r];
-      lab.textContent = NOTES[m % 12] + (Math.floor(m / 12) - 1);
-      gridEl.appendChild(lab);
-      for (let c = 0; c < cols; c++) {
-        const cell = document.createElement("button");
-        cell.type = "button";
-        cell.className = "cell" + (state[r][c] ? " on" : "");
-        cell.addEventListener("click", () => {
-          state[r][c] = !state[r][c];
-          cell.classList.toggle("on", state[r][c]);
-        });
-        gridEl.appendChild(cell);
-      }
+  }
+
+  document.getElementById("btnRandomize").addEventListener("click", () => {
+    for (let i = 0; i < NUM_LANES; i++) {
+      const box = document.querySelector(`.voice-lane[data-lane="${i}"]`);
+      const d = box.querySelector(".lane-density-r");
+      const row = box.querySelector(".lane-row");
+      d.value = String(12 + Math.floor(Math.random() * 78));
+      d.dispatchEvent(new Event("input"));
+      box.querySelector(".dens-val").textContent = d.value;
+      const opts = row.querySelectorAll("option");
+      row.selectedIndex = Math.floor(Math.random() * opts.length);
     }
-    if (playhead >= 0) setPlayhead(playhead);
-  }
-
-  function initState() {
-    rows = 8;
-    cols = Math.max(8, Math.min(32, Number(stepsEl.value) || 16));
-    state = [];
-    for (let r = 0; r < rows; r++) state[r] = Array(cols).fill(false);
-  }
-
-  initState();
-  renderGrid();
-
-  voiceEl.addEventListener("change", async () => {
-    btnPlay.disabled = false;
-    const v = voiceEl.value;
-    await ensureInstrument(v);
-  });
-
-  document.getElementById("btnClear").addEventListener("click", () => {
-    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) state[r][c] = false;
-    renderGrid();
+    statusEl.textContent = "Lanes randomized.";
   });
 
   stepsEl.addEventListener("change", () => {
@@ -617,18 +699,15 @@
       btnPlay.classList.add("primary");
     }
     cols = Math.max(8, Math.min(32, Number(stepsEl.value) || 16));
-    resizeState();
-    renderGrid();
-    clearPlayhead();
+    stepTickEl.textContent = "Step —";
   });
 
   ["root", "scale"].forEach((id) => {
-    document.getElementById(id).addEventListener("change", () => renderGrid());
+    document.getElementById(id).addEventListener("change", () => {});
   });
 
   [
     gainEl,
-    waveEl,
     attackEl,
     decayEl,
     sustainEl,
@@ -641,12 +720,14 @@
   ].forEach((el) => {
     el.addEventListener("input", () => {
       syncEffectParams();
-      if (instrument && !isSamplerMode(instrumentMode)) {
-        const db = Tone.gainToDb(Number(gainEl.value) / 100 * 0.9);
-        instrument.volume.value = db;
-        applySynthEnvelope();
-      } else if (instrument && isSamplerMode(instrumentMode)) {
-        instrument.volume.value = Tone.gainToDb(Number(gainEl.value) / 100 * 0.9);
+      const db = Tone.gainToDb(Number(gainEl.value) / 100 * 0.85);
+      if (samplerWeb) samplerWeb.volume.value = db;
+      if (samplerLocal) samplerLocal.volume.value = db;
+      for (let i = 0; i < NUM_LANES; i++) {
+        if (!isSamplerMode(getLaneVoiceEl(i).value) && laneSynths[i]) {
+          laneSynths[i].volume.value = db;
+          applySynthParams(laneSynths[i]);
+        }
       }
     });
   });
@@ -657,9 +738,15 @@
 
   btnPlay.addEventListener("click", async () => {
     await Tone.start();
-    await ensureInstrument(voiceEl.value);
-    if (isSamplerMode(instrumentMode) && !samplerReady) {
-      statusEl.textContent = "Still loading piano samples…";
+
+    try {
+      await prepareAllInstruments();
+    } catch (e) {
+      return;
+    }
+
+    if (pianosLoading) {
+      statusEl.textContent = "Still loading…";
       return;
     }
 
@@ -668,30 +755,30 @@
     btnPlay.classList.toggle("primary", !playing);
 
     if (playing) {
+      cols = Math.max(8, Math.min(32, Number(stepsEl.value) || 16));
       Tone.Transport.bpm.value = Math.max(40, Math.min(240, Number(bpmEl.value) || 96));
       Tone.Transport.cancel();
       stepIndex = 0;
       schedId = Tone.Transport.scheduleRepeat((time) => {
-        const col = stepIndex;
-        playColumn(col, time);
-        setPlayhead(col);
+        playStep(time);
+        stepTickEl.textContent = `Step ${stepIndex + 1} / ${cols}`;
         stepIndex = (stepIndex + 1) % cols;
       }, "16n");
       Tone.Transport.start();
+      statusEl.textContent = "Playing — adjust lanes while running.";
     } else {
       Tone.Transport.stop();
       if (schedId !== null) {
         Tone.Transport.clear(schedId);
         schedId = null;
       }
-      clearPlayhead();
+      stepTickEl.textContent = "Step —";
+      statusEl.textContent = "Stopped.";
     }
   });
 
-  ensureInstrument("polySynth").then(() => {
-    statusEl.textContent =
-      "Poly synth ready. Choose Piano (local WAV) for your Salamander 48kHz files (v10 layer in salamander-local/).";
-  });
+  statusEl.textContent =
+    "Flow mode: configure each lane, then Play. Randomize lanes for quick variation.";
 })();
   </script>
 </body>
